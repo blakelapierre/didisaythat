@@ -1,0 +1,34 @@
+body {
+  position: fixed;
+
+  padding: 0;
+  margin: 0;
+
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+
+  background-color: #000;
+
+  #nodes {
+    flex: 1 1 auto;
+
+    display: flex;
+
+    align-items: stretch;
+    justify-content: center;
+
+    &.vertical {
+      flex-direction: column-reverse;
+    }
+
+    div {
+      flex: 1 1 auto;
+
+      background-color: #fff;
+    }
+  }
+}
