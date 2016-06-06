@@ -63,12 +63,22 @@ function draw(analyser) {
   function update() {
     analyser.getByteFrequencyData(data);
 
+    const vertical = nodes.className === 'vertical';
+
+    console.log({vertical});
+
     for (let i= 0; i < nodes.children.length; i++) {
       const  child = nodes.children[i];
 
       const value = data[i];
 
       child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
+
+      const width = vertical ? `${value / 255 * 100}%` : 'auto',
+            height = vertical ? 'auto' : `${value / 255 * 100}%`;
+
+      child.style.width = width;
+      child.style.height = height;
     }
 
     requestAnimationFrame(update);
