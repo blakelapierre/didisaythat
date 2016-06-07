@@ -11,7 +11,8 @@ if (!MediaRecorder) alert('No MediaRecorder!');
 
 const audioContext = new AudioContext();
 
-const nodes = document.getElementById('nodes');
+const nodes = document.getElementById('nodes'),
+      history = document.getElementById('history');
 
 getUserMedia({audio: true})
   .then(attachRecorder)
@@ -42,7 +43,7 @@ function attachRecorder(stream) {
   }
 }
 
-const sizes = [32, 64, 128];
+const sizes = [32, 64, 128, 256];
 let nextSize = 1;
 
 function attachAnalyser({stream}) {
@@ -66,7 +67,9 @@ function attachAnalyser({stream}) {
   return {stream, analyser};
 }
 
-let data;
+const accumulationPeriod = 1000 / 10;
+let data, accumulations = 0, accumulationStart = new Date().getTime();
+const accumulator = [];
 
 function setAnalyserSize(analyser, size, nodes) {
   analyser.fftSize = size;
@@ -76,6 +79,8 @@ function setAnalyserSize(analyser, size, nodes) {
 
   data = new Uint8Array(count);
 
+  for (let i = 0; i < count; i++) accumulator[i] = 0;
+  accumulator.splice(count);
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
 }
@@ -84,7 +89,31 @@ function draw({analyser}) {
   updates.push(update);
 
   function update() {
+    const now = new Date().getTime();
+
     analyser.getByteFrequencyData(data);
+
+    if (now - accumulationStart > accumulationPeriod) {
+      // add accumulator to history
+      const slice = document.createElement('slice');
+
+      for (let i = 0; i < accumulator.length; i++) {
+        const node = document.createElement('node');
+
+        const averagedValue = Math.floor(accumulator[i] / accumulations);
+
+        node.style.backgroundColor = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
+
+        slice.insertBefore(node, slice.firstChild);
+
+        accumulator[i] = 0;
+      }
+
+      history.insertBefore(slice, history.firstChild);
+
+      accumulations = 0;
+      accumulationStart = now;
+    }
 
     const vertical = nodes.className === 'vertical';
 
@@ -96,6 +125,7 @@ function draw({analyser}) {
       const value = data[i];
 
       sum += value;
+      accumulator[i] += value;
 
       child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
 
@@ -110,8 +140,9 @@ function draw({analyser}) {
 
     nodes.style.backgroundColor = `rgba(${total}, ${total}, ${total}, 1)`;
 
+    accumulations++;
+
     return update;
-    // requestAnimationFrame(update);
   }
 }
 

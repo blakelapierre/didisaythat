@@ -106,6 +106,33 @@ body {
   }
 
   history {
-    max-height: 10em;
+    height: 10em;
+
+    color: #fff;
+
+    direction: rtl;
+
+    overflow: hidden;
+
+    slice {
+      float: left;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+      align-items: center;
+
+      height: 10em;
+
+      node {
+        flex: 1 1 auto;
+
+        display: block;
+
+        width: 1em;
+        height: 1em;
+      }
+    }
   }
 }
