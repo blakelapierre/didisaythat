@@ -18,7 +18,6 @@ getUserMedia({audio: true})
   .then(attachRecorder)
   .then(attachAnalyser)
   .then(draw)
-  .then(requestUpdateLoop)
   .catch(refresh);
 
 function getUserMedia(options) {
@@ -87,6 +86,8 @@ function setAnalyserSize(analyser, size, nodes) {
 
 function draw({analyser}) {
   updates.push(update);
+
+  requestUpdateLoop();
 
   function update() {
     const now = new Date().getTime();
