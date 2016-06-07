@@ -45,10 +45,59 @@ body {
     width: 2em;
     height: 2em;
 
-    background-color: #999;
+    transform: rotate(45deg);
+
+    cursor: pointer;
 
     &:hover {
-      background-color: #ccc;
+      color: #000;
+
+      background-color: rgba(32, 32, 32, 0.75);
+
+      box-shadow: inset #000 0px 0px 3em;
+    }
+
+    up, down, left, right {
+      position: absolute;
+
+      text-align: center;
+
+      font-size: 1.2em;
+      font-weight: bold;
+
+      color: #fff;
+    }
+
+    up {
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+
+    down {
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    left {
+      top: 0;
+      bottom: 0;
+      left: 0;
+
+      display: flex;
+
+      align-items: center;
+    }
+
+    right {
+      top: 0;
+      bottom: 0;
+      right: 0;
+
+      display: flex;
+
+      align-items: center;
     }
   }
 
