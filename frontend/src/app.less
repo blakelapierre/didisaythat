@@ -11,86 +11,99 @@ body {
   bottom: 0;
 
   display: flex;
+  flex-direction: column;
 
   background-color: #000;
 
-  #nodes {
-    height: 100%;
+  now {
+    position: relative;
 
     flex: 1 1 auto;
 
     display: flex;
 
-    align-items: stretch;
-    justify-content: center;
+    nodes {
+      flex: 1 1 auto;
 
-    &.vertical {
-      flex-direction: column-reverse;
-    }
+      display: flex;
 
-    div {
-      bottom: 0;
+      align-items: stretch;
+      justify-content: center;
 
-      flex: 1 0 auto;
+      &.vertical {
+        flex-direction: column-reverse;
+      }
 
-      background-color: #fff;
-    }
-  }
+      div {
+        bottom: 0;
 
-  fullscreen {
-    position: fixed;
+        flex: 1 0 auto;
 
-    bottom: 0;
-    right: 0;
-
-    font-size: 2em;
-    font-weight: bold;
-
-    width: 2em;
-    height: 2em;
-
-    transform: rotate(45deg);
-
-    cursor: pointer;
-
-    &:hover {
-      up, down, left, right {
-        text-shadow: rgba(255, 255, 255, 0.85) 0px 0px 5px;
+        background-color: #fff;
       }
     }
 
-    up, down, left, right {
+    fullscreen {
       position: absolute;
 
-      left: 0;
+      bottom: 0;
       right: 0;
 
-      height: 1em;
-      line-height: 1em;
+      font-size: 2em;
+      font-weight: bold;
 
-      text-align: center;
+      width: 2em;
+      height: 2em;
 
-      transform-origin: 50% 100%;
+      transform: rotate(45deg);
 
-      color: #fff;
+      cursor: pointer;
+
+      &:hover {
+        up, down, left, right {
+          text-shadow: rgba(255, 255, 255, 0.85) 0px 0px 5px;
+        }
+      }
+
+      up, down, left, right {
+        position: absolute;
+
+        left: 0;
+        right: 0;
+
+        height: 1em;
+        line-height: 1em;
+
+        text-align: center;
+
+        transform-origin: 50% 100%;
+
+        color: #fff;
+      }
+
+      down {
+        transform: rotate(180deg);
+      }
+
+      left {
+        transform: rotate(270deg);
+      }
+
+      right {
+        transform: rotate(90deg);
+      }
     }
 
-    down {
-      transform: rotate(180deg);
-    }
-
-    left {
-      transform: rotate(270deg);
-    }
-
-    right {
-      transform: rotate(90deg);
+    &.fullscreen {
+      fullscreen {
+        display: none;
+      }
     }
   }
 
-  &.fullscreen {
-    fullscreen {
-      display: none;
-    }
+  history {
+    flex: 1 0 auto;
+
+    max-height: 10em;
   }
 }

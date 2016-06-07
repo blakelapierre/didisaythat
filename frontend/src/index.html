@@ -11,18 +11,24 @@
   </head>
   <body>
 
-    <div id="nodes" class="vertical"
-         onclick="this.classList.toggle('vertical')"
-         oncontextmenu="return this.cycleFFTSize()">
-    </div>
+    <now>
+      <nodes id="nodes" class="vertical"
+           onclick="this.classList.toggle('vertical')"
+           oncontextmenu="return this.cycleFFTSize()">
+      </nodes>
 
-    <fullscreen onclick="requestFullScreen()"
-                title="Go FullScreen">
-      <up>↑</up>
-      <down>↑</down>
-      <left>↑</left>
-      <right>↑</right>
-    </fullscreen>
+      <fullscreen onclick="requestFullScreen()"
+                  title="Go FullScreen">
+        <up>↑</up>
+        <down>↑</down>
+        <left>↑</left>
+        <right>↑</right>
+      </fullscreen>
+    </now>
+
+    <history>
+
+    </history>
 
     <script src="vendor.js"></script>
     <script src="app.js"></script>

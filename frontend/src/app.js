@@ -18,7 +18,7 @@ getUserMedia({audio: true})
   .then(attachAnalyser)
   .then(draw)
   .then(requestUpdateLoop)
-  .catch(error => alert(error));
+  .catch(refresh);
 
 function getUserMedia(options) {
   return new Promise((resolve, reject) => navigator.getUserMedia(options, resolve, reject));
@@ -142,5 +142,12 @@ function updateLoop() {
 
     updates.splice(0);
     updates.push(...newUpdates);
+  }
+}
+
+function refresh(error) {
+  console.log(error); // should report these?
+  if (confirm(`An error occurred! (${JSON.stringify(error)}) Reload?`)) {
+    window.location.reload();
   }
 }
