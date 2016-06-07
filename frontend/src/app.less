@@ -110,28 +110,25 @@ body {
 
     color: #fff;
 
-    direction: rtl;
+    // direction: rtl;
 
     overflow: hidden;
+
+    display: flex;
+
 
     slice {
       float: left;
 
+      flex: 1 0 auto;
+
       display: flex;
       flex-direction: column;
 
-      justify-content: center;
-      align-items: center;
-
-      height: 10em;
-
       node {
-        flex: 1 1 auto;
+        flex: 1 0 auto;
 
         display: block;
-
-        width: 1em;
-        height: 1em;
       }
     }
   }

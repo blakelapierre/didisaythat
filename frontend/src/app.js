@@ -66,7 +66,14 @@ function attachAnalyser({stream}) {
   return {stream, analyser};
 }
 
-const accumulationPeriod = 1000 / 10;
+const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32];
+let currentAccumulationPeriodIndex = 0,
+    accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
+
+const historySizes = [10, 25, 50, 100, 175, 300];
+let currentHistorySizeIndex = 0,
+    historyLength = historySizes[currentHistorySizeIndex];
+
 let data, accumulations = 0, accumulationStart = new Date().getTime();
 const accumulator = [];
 
@@ -78,10 +85,20 @@ function setAnalyserSize(analyser, size, nodes) {
 
   data = new Uint8Array(count);
 
+  setHistoryLength(historyLength);
+
   for (let i = 0; i < count; i++) accumulator[i] = 0;
   accumulator.splice(count);
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
+}
+
+function setHistoryLength(length) {
+  historyLength = length;
+
+  for (let i = history.children.length; i < historyLength; i++) history.appendChild(document.createElement('slice'));
+  for (let i = history.children.length - 1; i >= historyLength; i--) history.children[i].remove();
+  history.appendChild(document.createElement('slice'));
 }
 
 function draw({analyser}) {
@@ -96,10 +113,16 @@ function draw({analyser}) {
 
     if (now - accumulationStart > accumulationPeriod) {
       // add accumulator to history
-      const slice = document.createElement('slice');
+      // const slice = document.createElement('slice');
+
+      const slice = history.lastElementChild;
+
+      for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
+      for (let i = slice.children.length - 1; i >= data.length; i--) slice.children[i].remove();
 
       for (let i = 0; i < accumulator.length; i++) {
-        const node = document.createElement('node');
+        const node = slice.children[i];
+        // const node = document.createElement('node');
 
         const averagedValue = Math.floor(accumulator[i] / accumulations);
 
@@ -152,6 +175,18 @@ window.requestFullScreen = () => {
   else if (document.body.webkitRequestFullScreen) document.body.webkitRequestFullScreen();
   else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
   else if (document.body.msRequestFullScreen) document.body.msRequestFullScreen();
+};
+
+window.cycleHistoryLength = () => {
+  currentHistorySizeIndex = (currentHistorySizeIndex + 1) % historySizes.length;
+  setHistoryLength(historySizes[currentHistorySizeIndex]);
+};
+
+window.cycleAccumulationPeriod = () => {
+  currentAccumulationPeriodIndex = (currentAccumulationPeriodIndex + 1) % accumulationPeriods.length;
+
+  accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
+  return false;
 };
 
 document.body.addEventListener('webkitfullscreenchange', event => {
