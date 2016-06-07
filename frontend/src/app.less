@@ -35,4 +35,26 @@ body {
       background-color: #fff;
     }
   }
+
+  fullscreen {
+    position: fixed;
+
+    bottom: 0;
+    right: 0;
+
+    width: 2em;
+    height: 2em;
+
+    background-color: #999;
+
+    &:hover {
+      background-color: #ccc;
+    }
+  }
+
+  &.fullscreen {
+    fullscreen {
+      display: none;
+    }
+  }
 }

@@ -11,6 +11,8 @@ if (!MediaRecorder) alert('No MediaRecorder!');
 
 const audioContext = new AudioContext();
 
+const nodes = document.getElementById('nodes');
+
 getUserMedia({audio: true})
   .then(attachRecorder)
   .then(attachAnalyser)
@@ -31,7 +33,7 @@ function attachRecorder(stream) {
 
   recorder.start();
 
-  return stream;
+  return {stream};
 
   function addData(event) {
     data.push(event.data);
@@ -39,22 +41,21 @@ function attachRecorder(stream) {
   }
 }
 
-function attachAnalyser(stream) {
+function attachAnalyser({stream}) {
   const source = audioContext.createMediaStreamSource(stream),
-        analyser = audioContext.createAnalyser();
+        analyser = audioContext.createAnalyser(),
+        rate = audioContext.sampleRate;
 
-  analyser.fftSize = 128;
+  analyser.fftSize = 32;
 
   source.connect(analyser);
 
-  return analyser;
+  return {stream, analyser};
 }
 
-function draw(analyser) {
+function draw({analyser}) {
   const bins = analyser.frequencyBinCount,
         data = new Uint8Array(bins);
-
-  const nodes = document.getElementById('nodes');
 
   for (let i = 0; i < bins / 2; i++) {
     nodes.appendChild(document.createElement('div'));
@@ -82,5 +83,27 @@ function draw(analyser) {
     }
 
     requestAnimationFrame(update);
+  }
+}
+
+window.requestFullScreen = () => {
+  if (document.body.requestFullScreen) document.body.requestFullScreen();
+  else if (document.body.webkitRequestFullScreen) document.body.webkitRequestFullScreen();
+  else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
+  else if (document.body.msRequestFullScreen) document.body.msRequestFullScreen();
+};
+
+document.body.addEventListener('webkitfullscreenchange', event => {
+  document.body.classList.toggle('fullscreen');
+});
+
+function updateLoop() {
+  processUpdates(updates);
+  requestAnimationFrame(updateLoop);
+
+  function processUpdates(updates) {
+    updates.forEach(update);
+
+    updates.splice(0);
   }
 }
