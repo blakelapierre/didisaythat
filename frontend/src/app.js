@@ -12,7 +12,8 @@ if (!MediaRecorder) alert('No MediaRecorder!');
 const audioContext = new AudioContext();
 
 const nodes = document.getElementById('nodes'),
-      history = document.getElementById('history');
+      history = document.getElementById('history'),
+      size = document.getElementById('size');
 
 getUserMedia({audio: true})
   .then(attachRecorder)
@@ -28,17 +29,25 @@ function attachRecorder(stream) {
   const recorder = new MediaRecorder(stream),
         data = [];
 
-  let size = 0;
+  let dataSize = 0;
 
   recorder.ondataavailable = addData;
 
   recorder.start();
 
+  updates.push(updateSize);
+
   return {stream};
 
   function addData(event) {
     data.push(event.data);
-    size += event.data.size;
+    dataSize += event.data.size;
+  }
+
+  function updateSize() {
+    size.innerHTML = dataSize;
+
+    return updateSize;
   }
 }
 
