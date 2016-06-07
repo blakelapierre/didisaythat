@@ -43,7 +43,7 @@ function attachAnalyser(stream) {
   const source = audioContext.createMediaStreamSource(stream),
         analyser = audioContext.createAnalyser();
 
-  analyser.fftSize = 32;
+  analyser.fftSize = 128;
 
   source.connect(analyser);
 
@@ -56,7 +56,9 @@ function draw(analyser) {
 
   const nodes = document.getElementById('nodes');
 
-  console.log({nodes});
+  for (let i = 0; i < bins / 2; i++) {
+    nodes.appendChild(document.createElement('div'));
+  }
 
   update();
 
@@ -64,8 +66,6 @@ function draw(analyser) {
     analyser.getByteFrequencyData(data);
 
     const vertical = nodes.className === 'vertical';
-
-    console.log({vertical});
 
     for (let i= 0; i < nodes.children.length; i++) {
       const  child = nodes.children[i];
