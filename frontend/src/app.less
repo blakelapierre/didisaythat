@@ -61,40 +61,69 @@ body {
     up, down, left, right {
       position: absolute;
 
-      top: 0;
-      bottom: 0;
       left: 0;
       right: 0;
 
-      font-size: 1em;
-      font-weight: bold;
+      height: 1em;
 
-      line-height: 1em;
+      text-align: center;
+
+      transform-origin: 50% 100%;
 
       color: #fff;
-
-      display: flex;
-    }
-
-    up {
-      align-items: flex-start;
-      justify-content: center;
     }
 
     down {
-      align-items: flex-end;
-      justify-content: center;
+      transform: rotate(180deg);
     }
 
     left {
-      align-items: center;
-      justify-content: flex-start;
+      transform: rotate(270deg);
     }
 
     right {
-      align-items: center;
-      justify-content: flex-end;
+      transform: rotate(90deg);
     }
+
+    // up, down, left, right {
+    //   position: absolute;
+
+    //   top: 0;
+    //   bottom: 0;
+    //   left: 0;
+    //   right: 0;
+
+    //   font-size: 1em;
+    //   font-weight: bold;
+
+    //   line-height: 1em;
+
+    //   color: #fff;
+
+    //   display: flex;
+    // }
+
+
+
+    // up {
+    //   align-items: flex-start;
+    //   justify-content: center;
+    // }
+
+    // down {
+    //   align-items: flex-end;
+    //   justify-content: center;
+    // }
+
+    // left {
+    //   align-items: center;
+    //   justify-content: flex-start;
+    // }
+
+    // right {
+    //   align-items: center;
+    //   justify-content: flex-end;
+    // }
   }
 
   &.fullscreen {
