@@ -18,12 +18,16 @@ body {
   now {
     position: relative;
 
-    flex: 1 1 auto;
-
-    display: flex;
+    height: calc(100% - 20em);
 
     nodes {
-      flex: 1 1 auto;
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+
+      height: 100%;
 
       display: flex;
 
@@ -102,8 +106,6 @@ body {
   }
 
   history {
-    flex: 1 0 auto;
-
     max-height: 10em;
   }
 }
