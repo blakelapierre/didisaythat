@@ -24,7 +24,9 @@ body {
   now {
     position: relative;
 
-    height: calc(100% - 20em);
+    height: calc(100% - 10em);
+
+    // flex: 1 1 auto;
 
     nodes {
       position: absolute;
@@ -106,7 +108,10 @@ body {
   }
 
   history {
-    height: 10em;
+    flex: 0 0 auto;
+
+    max-height: 10em;
+    min-height: 10em;
 
     color: #fff;
 
