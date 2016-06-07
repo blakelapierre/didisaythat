@@ -17,6 +17,7 @@ getUserMedia({audio: true})
   .then(attachRecorder)
   .then(attachAnalyser)
   .then(draw)
+  .then(requestUpdateLoop)
   .catch(error => alert(error));
 
 function getUserMedia(options) {
@@ -41,37 +42,60 @@ function attachRecorder(stream) {
   }
 }
 
+const sizes = [32, 64, 128];
+let nextSize = 1;
+
 function attachAnalyser({stream}) {
   const source = audioContext.createMediaStreamSource(stream),
         analyser = audioContext.createAnalyser(),
         rate = audioContext.sampleRate;
 
-  analyser.fftSize = 32;
+  analyser.smoothingTimeConstant = 0.66;
+  setAnalyserSize(analyser, 32, nodes);
 
   source.connect(analyser);
+
+  nodes.cycleFFTSize = () => {
+    setAnalyserSize(analyser, sizes[nextSize++], nodes);
+
+    nextSize = nextSize % sizes.length;
+
+    return false;
+  };
 
   return {stream, analyser};
 }
 
-function draw({analyser}) {
+let data;
+
+function setAnalyserSize(analyser, size, nodes) {
+  analyser.fftSize = size;
+
   const bins = analyser.frequencyBinCount,
-        data = new Uint8Array(bins);
+        count = bins / 2;
 
-  for (let i = 0; i < bins / 2; i++) {
-    nodes.appendChild(document.createElement('div'));
-  }
+  data = new Uint8Array(count);
 
-  update();
+  for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
+  for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
+}
+
+function draw({analyser}) {
+  updates.push(update);
 
   function update() {
     analyser.getByteFrequencyData(data);
 
     const vertical = nodes.className === 'vertical';
 
+    let sum = 0;
+
     for (let i= 0; i < nodes.children.length; i++) {
       const  child = nodes.children[i];
 
       const value = data[i];
+
+      sum += value;
 
       child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
 
@@ -82,7 +106,12 @@ function draw({analyser}) {
       child.style.height = height;
     }
 
-    requestAnimationFrame(update);
+    const total = sum / nodes.children.length;
+
+    nodes.style.backgroundColor = `rgba(${total}, ${total}, ${total}, 1)`;
+
+    return update;
+    // requestAnimationFrame(update);
   }
 }
 
@@ -97,13 +126,21 @@ document.body.addEventListener('webkitfullscreenchange', event => {
   document.body.classList.toggle('fullscreen');
 });
 
+const updates = [];
+
+function requestUpdateLoop() {
+  requestAnimationFrame(updateLoop);
+}
+
 function updateLoop() {
   processUpdates(updates);
-  requestAnimationFrame(updateLoop);
+  requestUpdateLoop();
+  // requestAnimationFrame(updateLoop);
 
   function processUpdates(updates) {
-    updates.forEach(update);
+    const newUpdates = updates.map(update => update());
 
     updates.splice(0);
+    updates.push(...newUpdates);
   }
 }

@@ -4,16 +4,20 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Did I Say That?</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=false">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
 
     <link rel="stylesheet" href="app.css">
   </head>
   <body>
 
-    <div id="nodes" class="vertical" onclick="this.classList.toggle('vertical')"></div>
+    <div id="nodes" class="vertical"
+         onclick="this.classList.toggle('vertical')"
+         oncontextmenu="return this.cycleFFTSize()">
+    </div>
 
-    <fullscreen onclick="requestFullScreen()" title="Go FullScreen">
+    <fullscreen onclick="requestFullScreen()"
+                title="Go FullScreen">
       <up>↑</up>
       <down>↓</down>
       <left>←</left>
