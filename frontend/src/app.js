@@ -51,7 +51,7 @@ function attachAnalyser({stream}) {
         rate = audioContext.sampleRate;
 
   analyser.smoothingTimeConstant = 0.66;
-  setAnalyserSize(analyser, 32, nodes);
+  setAnalyserSize(analyser, sizes[0], nodes);
 
   source.connect(analyser);
 
