@@ -24,7 +24,7 @@ getUserMedia({audio: true})
   .then(draw)
   .catch(refresh);
 
-const smoothingTimeConstant = 0.8;
+const smoothingTimeConstant = 0.66;
 
 const sizes = [32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/];
 const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64];
