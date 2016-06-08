@@ -22,7 +22,7 @@ getUserMedia({audio: true})
   .then(draw)
   .catch(refresh);
 
-const sizes = [32, 64, 128, 256, 512, 1024, 2048, 4096];
+const sizes = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
 const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32];
 const historySizes = [10, 25, 50, 100, 175, 300];
 
@@ -57,7 +57,7 @@ function attachRecorder(stream) {
   }
 }
 
-let nextSize = 1;
+let currentSize = 0;
 
 function attachAnalyser({stream, data}) {
   const source = audioContext.createMediaStreamSource(stream),
@@ -65,14 +65,22 @@ function attachAnalyser({stream, data}) {
         rate = audioContext.sampleRate;
 
   analyser.smoothingTimeConstant = 0.66;
-  setAnalyserSize(analyser, sizes[0], nodes);
+  setAnalyserSize(analyser, sizes[currentSize], nodes);
 
   source.connect(analyser);
 
-  nodes.cycleFFTSize = () => {
-    setAnalyserSize(analyser, sizes[nextSize++], nodes);
+  nodes.cycleFFTSize = backwards => {
+    if (backwards) {
+      currentSize = currentSize - 1;
+      if (currentSize < 0) currentSize = sizes.length - 1;
+    }
+    else {
+      currentSize = (currentSize + 1) % sizes.length;
+    }
 
-    nextSize = nextSize % sizes.length;
+    currentSize = currentSize % sizes.length;
+
+    setAnalyserSize(analyser, sizes[currentSize], nodes);
 
     return false;
   };
@@ -225,6 +233,10 @@ window.cycleAccumulationPeriod = () => {
 window.playback = event => {
   console.log('playback', event);
   playback();
+};
+
+window.wheel = event => {
+  console.log('wheel', event);
 };
 
 document.body.addEventListener('webkitfullscreenchange', event => {

@@ -13,6 +13,7 @@
 
     <now>
       <nodes id="nodes" class="vertical"
+           onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
            onclick="this.classList.toggle('vertical')"
            oncontextmenu="return this.cycleFFTSize()">
       </nodes>
