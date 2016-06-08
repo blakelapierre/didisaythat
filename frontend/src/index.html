@@ -11,15 +11,21 @@
   </head>
   <body>
 
-    <now>
-      <nodes id="nodes" class="vertical"
-           onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
-           onclick="this.classList.toggle('vertical')"
-           onmousedown="return this.mouseDown(event)"
-           onmouseup="return this.mouseUp(event)"
-           onmousemove="return this.mouseMove(event)"
-           oncontextmenu="return this.cycleFFTSize()">
+    <now id="now"
+         onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
+         onclick="this.classList.toggle('vertical')"
+         onmousedown="return this.mouseDown(event)"
+         onmouseup="return this.mouseUp(event)"
+         onmousemove="return this.mouseMove(event)"
+         oncontextmenu="return this.cycleFFTSize()">
+      <nodes id="nodes" class="vertical">
       </nodes>
+
+      <menu id="now-menu">
+        <bars>
+        More Bars
+        </bars>
+      </menu>
 
       <fullscreen onclick="requestFullScreen()"
                   title="Go FullScreen">
@@ -32,10 +38,10 @@
 
     <history id="history"
              onmousewheel="return cycleHistoryLength(event.deltaY < 0)"
-             onclick="playback(event)"
+             onmousedown="return this.mouseDown(event)"
              oncontextmenu="return cycleAccumulationPeriod()">
-
     </history>
+    <playback-visuals></playback-visuals>
 
     <size id="size"></size>
 

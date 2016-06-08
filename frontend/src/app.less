@@ -15,6 +15,9 @@ body {
 
   background-color: #000;
 
+  font-family: monospace, sans-serif;;
+  font-weight: bolder;
+
   &.fullscreen {
     fullscreen {
       display: none;
@@ -55,6 +58,35 @@ body {
       }
     }
 
+    menu {
+      display: none;
+
+      position: absolute;
+
+      margin: 0;
+      padding: 0;
+
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      justify-content: center;
+      align-items: center;
+
+      font-size: 3em;
+
+      color: #fff;
+
+      background-color: rgba(0, 0, 0, 0.33);
+
+      user-select: none;
+
+      &.visible {
+        display: flex;
+      }
+    }
+
     fullscreen {
       position: absolute;
 
@@ -70,6 +102,9 @@ body {
       transform: rotate(45deg);
 
       cursor: pointer;
+
+      user-select: none;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
       &:hover {
         up, down, left, right {
@@ -114,6 +149,7 @@ body {
     min-height: 10em;
 
     color: #fff;
+    background-color: #000;
 
     // direction: rtl;
 
@@ -130,14 +166,40 @@ body {
       display: flex;
       flex-direction: column;
 
+      background-color: #000;
+
+      @opacity: 0.67;
+
       &.start {
-        background-color: rgba(255, 0, 0, 0.9);
+        background-color: rgba(0, 255, 0, @opacity);
+      }
+
+      &.end {
+        background-color: rgba(255, 0, 0, @opacity);
+      }
+
+      &.mover {
+        background-color: rgba(0, 0, 255, @opacity);
+      }
+
+      &.start.mover {
+        background-color: rgba(0, 255, 255, @opacity);
+      }
+
+      &.end.mover {
+        background-color: rgba(255, 0, 255, @opacity);
       }
 
       node {
+        margin: 0;
+        padding: 0;
+        border: none;
+
         flex: 1 0 auto;
 
         display: block;
+
+        background-color: #fff;
       }
     }
   }

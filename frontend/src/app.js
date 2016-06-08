@@ -11,9 +11,11 @@ if (!MediaRecorder) alert('No MediaRecorder!');
 
 const audioContext = new AudioContext();
 
-const nodes = document.getElementById('nodes'),
+const now = document.getElementById('now'),
+      nodes = document.getElementById('nodes'),
       history = document.getElementById('history'),
-      size = document.getElementById('size');
+      size = document.getElementById('size'),
+      nowMenu = document.getElementById('now-menu');
 
 getUserMedia({audio: true})
   .then(attachRecorder)
@@ -22,11 +24,23 @@ getUserMedia({audio: true})
   .then(draw)
   .catch(refresh);
 
-const sizes = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
-const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32];
+const smoothingTimeConstant = 0.8;
+
+const sizes = [32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/];
+const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64];
 const historySizes = [5,25, 50, 100, 175, 300, 500, 800, 1200];
 
-const smoothingTimeConstant = 0.8;
+let currentSize = 0;
+
+let currentAccumulationPeriodIndex = 0,
+    accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
+
+let currentHistorySizeIndex = 0,
+    historyLength = historySizes[currentHistorySizeIndex];
+
+let data, accumulations = 0, accumulationStart = new Date().getTime();
+
+const accumulator = [];
 
 
 function getUserMedia(options) {
@@ -60,7 +74,6 @@ function attachRecorder(stream) {
   }
 }
 
-let currentSize = 0;
 
 function attachAnalyser({stream, data, startTime}) {
   const source = audioContext.createMediaStreamSource(stream),
@@ -72,7 +85,7 @@ function attachAnalyser({stream, data, startTime}) {
 
   source.connect(analyser);
 
-  nodes.cycleFFTSize = backwards => {
+  now.cycleFFTSize = backwards => {
     if (backwards) {
       currentSize = currentSize - 1;
       if (currentSize < 0) currentSize = sizes.length - 1;
@@ -92,23 +105,60 @@ function attachAnalyser({stream, data, startTime}) {
   let start = {x: 0, y: 0},
       last = {x: 0, y: 0};
 
-  nodes.mouseDown = event => {
-    console.log('showMenu', event);
+  let timer;
+
+  now.mouseDown = event => {
     hasMenu = true;
     start.x = last.x = event.clientX;
     start.y = last.y = event.clientY;
+
+    timer = setTimeout(() => {
+      if (hasMenu) nowMenu.classList.add('visible');
+      timer = undefined;
+    }, 125);
   };
 
-  nodes.mouseUp = event => {
+  now.mouseUp = event => {
     hasMenu = false;
+    nowMenu.classList.remove('visible');
+
+    if (timer) {
+      clearTimeout(timer);
+
+      nodes.classList.toggle('vertical');
+
+      timer = undefined;
+    }
   };
 
-  nodes.mouseMove = event => {
+  now.mouseMove = event => {
     const total = {x: event.clientX - start.x, y: event.clientY - start.y};
 
     if (hasMenu) {
-    console.log('mousemove', event, total);
+      // console.log('mousemove', event, total);
 
+    }
+  };
+
+  history.mouseDown = event => {
+    console.log(event);
+    if (event.button === 0) {
+      const slice = event.target.tagName === 'SLICE' ? event.target : event.target.parentNode;
+
+      updates.push(() => {
+        if (indicators.mover) indicators.mover.classList.remove('mover');
+        if (indicators.start) indicators.start.classList.remove('start');
+        if (indicators.end) indicators.end.classList.remove('end');
+
+        indicators.start = indicators.mover = slice;
+        indicators.end = history.firstChild;
+
+        indicators.start.classList.add('start');
+        indicators.end.classList.add('end');
+        indicators.mover.classList.add('mover');
+      });
+
+      playback(slice.approximateTime);
     }
   };
 
@@ -124,14 +174,12 @@ function attachPlaybackService({stream, data, startTime, analyser}) {
     const blob = new Blob(data);
     const delta = time - startTime;
 
-console.log(time, startTime, delta);
     const url = window.URL.createObjectURL(blob);
 
-    console.log(url);
+    console.log('playback', time, delta, url);
 
     audio.src = url;
 
-    console.log(audio);
     audio.currentTime = delta / 1000;
     audio.play();
   };
@@ -139,15 +187,6 @@ console.log(time, startTime, delta);
 
   return {stream, data, analyser, playback};
 }
-
-let currentAccumulationPeriodIndex = 0,
-    accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
-
-let currentHistorySizeIndex = 0,
-    historyLength = historySizes[currentHistorySizeIndex];
-
-let data, accumulations = 0, accumulationStart = new Date().getTime();
-const accumulator = [];
 
 function setAnalyserSize(analyser, size, nodes) {
   analyser.fftSize = size;
@@ -172,6 +211,7 @@ function setHistoryLength(length) {
   for (let i = history.children.length - 1; i >= historyLength; i--) history.children[i].remove();
 }
 
+let indicators = {mover: undefined, start: undefined, end: undefined};
 function draw({analyser}) {
   updates.push(update);
 
@@ -191,7 +231,7 @@ function draw({analyser}) {
       for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
       for (let i = slice.children.length - 1; i >= data.length; i--) slice.children[i].remove();
 
-      slice.approximateTime = new Date().getTime();
+      slice.approximateTime = now;
 
       for (let i = 0; i < accumulator.length; i++) {
         const node = slice.children[i];
@@ -199,11 +239,32 @@ function draw({analyser}) {
 
         const averagedValue = Math.floor(accumulator[i] / accumulations);
 
-        node.style.backgroundColor = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
+        // node.style.backgroundColor = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
 
+        node.style.opacity = averagedValue / 255;
+
+        slice.classList.remove('mover');
+        slice.classList.remove('start');
+        slice.classList.remove('end');
         slice.insertBefore(node, slice.firstChild);
 
         accumulator[i] = 0;
+      }
+
+      if (indicators.mover) {
+        indicators.mover.classList.remove('mover');
+
+        if (indicators.mover === indicators.end) {
+          indicators.start.classList.remove('start');
+          indicators.end.classList.remove('end');
+
+          indicators.start = indicators.end = indicators.mover = undefined;
+        }
+        else {
+          indicators.mover = indicators.mover.previousSibling;
+
+          indicators.mover.classList.add('mover');
+        }
       }
 
       history.insertBefore(slice, history.firstChild);
@@ -262,12 +323,6 @@ window.cycleAccumulationPeriod = () => {
   return false;
 };
 
-window.playback = event => {
-  console.log('playback', event);
-  const slice = event.target.parentNode;
-  playback(event.target.parentNode.approximateTime);
-};
-
 window.wheel = event => {
   console.log('wheel', event);
 };
@@ -291,8 +346,8 @@ function updateLoop() {
     const newUpdates = updates.map(update => update());
 
     updates.splice(0);
-    // updates.push(...newUpdates.filter(e => typeof e === 'function')); // should be this, but don't want to call typeof every time
-    updates.push(...newUpdates);
+    updates.push(...newUpdates.filter(e => typeof e === 'function')); // should be this, but don't want to call typeof every time
+    // updates.push(...newUpdates);
   }
 }
 
