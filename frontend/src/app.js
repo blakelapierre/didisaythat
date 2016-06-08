@@ -18,8 +18,14 @@ const nodes = document.getElementById('nodes'),
 getUserMedia({audio: true})
   .then(attachRecorder)
   .then(attachAnalyser)
+  .then(attachPlaybackService)
   .then(draw)
   .catch(refresh);
+
+const sizes = [32, 64, 128, 256, 512, 1024, 2048, 4096];
+const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32];
+const historySizes = [10, 25, 50, 100, 175, 300];
+
 
 function getUserMedia(options) {
   return new Promise((resolve, reject) => navigator.getUserMedia(options, resolve, reject));
@@ -37,7 +43,7 @@ function attachRecorder(stream) {
 
   updates.push(updateSize);
 
-  return {stream};
+  return {stream, data};
 
   function addData(event) {
     data.push(event.data);
@@ -51,10 +57,9 @@ function attachRecorder(stream) {
   }
 }
 
-const sizes = [32, 64, 128, 256];
 let nextSize = 1;
 
-function attachAnalyser({stream}) {
+function attachAnalyser({stream, data}) {
   const source = audioContext.createMediaStreamSource(stream),
         analyser = audioContext.createAnalyser(),
         rate = audioContext.sampleRate;
@@ -72,14 +77,33 @@ function attachAnalyser({stream}) {
     return false;
   };
 
-  return {stream, analyser};
+  return {stream, data, analyser};
 }
 
-const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32];
+
+let playback;
+function attachPlaybackService({stream, data, analyser}) {
+  const audio = document.createElement('audio');
+
+  playback = () => {
+    const blob = new Blob(data);
+
+    const url = window.URL.createObjectURL(blob);
+
+    console.log(url);
+
+    audio.src = url;
+
+    audio.play();
+  };
+
+
+  return {stream, data, analyser, playback};
+}
+
 let currentAccumulationPeriodIndex = 0,
     accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
 
-const historySizes = [10, 25, 50, 100, 175, 300];
 let currentHistorySizeIndex = 0,
     historyLength = historySizes[currentHistorySizeIndex];
 
@@ -196,6 +220,11 @@ window.cycleAccumulationPeriod = () => {
 
   accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
   return false;
+};
+
+window.playback = event => {
+  console.log('playback', event);
+  playback();
 };
 
 document.body.addEventListener('webkitfullscreenchange', event => {
