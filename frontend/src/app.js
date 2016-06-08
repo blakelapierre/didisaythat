@@ -24,7 +24,9 @@ getUserMedia({audio: true})
 
 const sizes = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768];
 const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32];
-const historySizes = [10, 25, 50, 100, 175, 300];
+const historySizes = [5,25, 50, 100, 175, 300, 500, 800, 1200];
+
+const smoothingTimeConstant = 0.8;
 
 
 function getUserMedia(options) {
@@ -33,6 +35,7 @@ function getUserMedia(options) {
 
 function attachRecorder(stream) {
   const recorder = new MediaRecorder(stream),
+        startTime = new Date().getTime(),
         data = [];
 
   let dataSize = 0;
@@ -43,7 +46,7 @@ function attachRecorder(stream) {
 
   updates.push(updateSize);
 
-  return {stream, data};
+  return {stream, data, startTime};
 
   function addData(event) {
     data.push(event.data);
@@ -59,12 +62,12 @@ function attachRecorder(stream) {
 
 let currentSize = 0;
 
-function attachAnalyser({stream, data}) {
+function attachAnalyser({stream, data, startTime}) {
   const source = audioContext.createMediaStreamSource(stream),
         analyser = audioContext.createAnalyser(),
         rate = audioContext.sampleRate;
 
-  analyser.smoothingTimeConstant = 0.66;
+  analyser.smoothingTimeConstant = smoothingTimeConstant;
   setAnalyserSize(analyser, sizes[currentSize], nodes);
 
   source.connect(analyser);
@@ -85,23 +88,51 @@ function attachAnalyser({stream, data}) {
     return false;
   };
 
-  return {stream, data, analyser};
+  let hasMenu = false;
+  let start = {x: 0, y: 0},
+      last = {x: 0, y: 0};
+
+  nodes.mouseDown = event => {
+    console.log('showMenu', event);
+    hasMenu = true;
+    start.x = last.x = event.clientX;
+    start.y = last.y = event.clientY;
+  };
+
+  nodes.mouseUp = event => {
+    hasMenu = false;
+  };
+
+  nodes.mouseMove = event => {
+    const total = {x: event.clientX - start.x, y: event.clientY - start.y};
+
+    if (hasMenu) {
+    console.log('mousemove', event, total);
+
+    }
+  };
+
+  return {stream, data, startTime, analyser};
 }
 
 
 let playback;
-function attachPlaybackService({stream, data, analyser}) {
+function attachPlaybackService({stream, data, startTime, analyser}) {
   const audio = document.createElement('audio');
 
-  playback = () => {
+  playback = (time = startTime) => {
     const blob = new Blob(data);
+    const delta = time - startTime;
 
+console.log(time, startTime, delta);
     const url = window.URL.createObjectURL(blob);
 
     console.log(url);
 
     audio.src = url;
 
+    console.log(audio);
+    audio.currentTime = delta / 1000;
     audio.play();
   };
 
@@ -139,7 +170,6 @@ function setHistoryLength(length) {
 
   for (let i = history.children.length; i < historyLength; i++) history.appendChild(document.createElement('slice'));
   for (let i = history.children.length - 1; i >= historyLength; i--) history.children[i].remove();
-  history.appendChild(document.createElement('slice'));
 }
 
 function draw({analyser}) {
@@ -160,6 +190,8 @@ function draw({analyser}) {
 
       for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
       for (let i = slice.children.length - 1; i >= data.length; i--) slice.children[i].remove();
+
+      slice.approximateTime = new Date().getTime();
 
       for (let i = 0; i < accumulator.length; i++) {
         const node = slice.children[i];
@@ -218,8 +250,8 @@ window.requestFullScreen = () => {
   else if (document.body.msRequestFullScreen) document.body.msRequestFullScreen();
 };
 
-window.cycleHistoryLength = () => {
-  currentHistorySizeIndex = (currentHistorySizeIndex + 1) % historySizes.length;
+window.cycleHistoryLength = backwards => {
+  currentHistorySizeIndex = backwards ? (currentHistorySizeIndex > 0 ? currentHistorySizeIndex - 1 : historySizes.length - 1): (currentHistorySizeIndex + 1) % historySizes.length;
   setHistoryLength(historySizes[currentHistorySizeIndex]);
 };
 
@@ -232,7 +264,8 @@ window.cycleAccumulationPeriod = () => {
 
 window.playback = event => {
   console.log('playback', event);
-  playback();
+  const slice = event.target.parentNode;
+  playback(event.target.parentNode.approximateTime);
 };
 
 window.wheel = event => {
@@ -258,13 +291,14 @@ function updateLoop() {
     const newUpdates = updates.map(update => update());
 
     updates.splice(0);
+    // updates.push(...newUpdates.filter(e => typeof e === 'function')); // should be this, but don't want to call typeof every time
     updates.push(...newUpdates);
   }
 }
 
 function refresh(error) {
   console.log(error); // should report these?
-  if (confirm(`An error occurred! (${JSON.stringify(error)}) Reload?`)) {
+  if (confirm(`An error occurred! (${error.message} ${error.stack}) Reload?`)) {
     window.location.reload();
   }
 }
