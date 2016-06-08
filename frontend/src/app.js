@@ -28,14 +28,14 @@ const smoothingTimeConstant = 0.8;
 
 const sizes = [32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/];
 const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64];
-const historySizes = [5,25, 50, 100, 175, 300, 500, 800, 1200];
+const historySizes = [10, 25, 50, 100, 175, 300, 500, 800, 1200];
 
 let currentSize = 0;
 
-let currentAccumulationPeriodIndex = 0,
+let currentAccumulationPeriodIndex = 3,
     accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
 
-let currentHistorySizeIndex = 0,
+let currentHistorySizeIndex = 1,
     historyLength = historySizes[currentHistorySizeIndex];
 
 let data, accumulations = 0, accumulationStart = new Date().getTime();
@@ -169,6 +169,9 @@ function attachAnalyser({stream, data, startTime}) {
 let playback;
 function attachPlaybackService({stream, data, startTime, analyser}) {
   const audio = document.createElement('audio');
+  document.body.appendChild(audio);
+
+  audio.volume = 1;
 
   playback = (time = startTime) => {
     const blob = new Blob(data);
@@ -261,9 +264,9 @@ function draw({analyser}) {
           indicators.start = indicators.end = indicators.mover = undefined;
         }
         else {
-          indicators.mover = indicators.mover.previousSibling;
+          indicators.mover = indicators.mover.previousElementSibling;
 
-          indicators.mover.classList.add('mover');
+          if (indicators.mover) indicators.mover.classList.add('mover'); // can this be reorganized to remove the if?
         }
       }
 

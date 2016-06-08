@@ -119,7 +119,7 @@ body {
         right: 0;
 
         height: 1em;
-        line-height: 1em;
+        line-height: 1 em;
 
         text-align: center;
 
@@ -128,17 +128,63 @@ body {
         color: #fff;
       }
 
-      down {
-        transform: rotate(180deg);
+      a1 {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        down {
+          transform: rotate(180deg);
+        }
       }
 
-      left {
-        transform: rotate(270deg);
+      a2 {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        transform: rotate(-90deg);
+
+        transform-origin: 50% 50%;
+
+        right {
+          transform: rotate(180deg);
+        }
       }
 
-      right {
-        transform: rotate(90deg);
-      }
+      // up, down, left, right {
+      //   position: absolute;
+
+      //   left: 0;
+      //   right: 0;
+
+      //   height: 1em;
+      //   line-height: 1em;
+
+      //   text-align: center;
+
+      //   transform-origin: 50% 100%;
+
+      //   color: #fff;
+      // }
+
+      // down {
+      //   transform: rotate(180deg);
+      // }
+
+      // left {
+      //   transform: rotate(270deg);
+      // }
+
+      // right {
+      //   transform: rotate(90deg);
+      // }
     }
   }
 
