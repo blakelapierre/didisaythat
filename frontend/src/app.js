@@ -39,8 +39,6 @@ const historySizes = [10, 25, 50, 100, 175, 300, 500, 800, 1200];
 
 const sizesCycle = sizes.create();
 
-let currentSize = 0;
-
 let currentAccumulationPeriodIndex = 3,
     accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
 
@@ -93,12 +91,10 @@ function attachAnalyser({stream, data, startTime}) {
 
   const gain = audioContext.createGain();
 
-  gain.gain.value = 1;
+  gain.gain.value = 1; // here for tweaking
 
   source.connect(gain);
   gain.connect(analyser);
-
-  // source.connect(analyser);
 
   now.cycleFFTSize = backwards => {
     if (backwards) sizesCycle.goBackward();
@@ -176,8 +172,6 @@ function attachAnalyser({stream, data, startTime}) {
 
 let playback;
 function attachPlaybackService({stream, data, startTime, analyser}) {
-  // document.body.appendChild(audio);
-
   playback = (time = startTime) => {
     const blob = new Blob(data);
     const delta = time - startTime;
@@ -191,7 +185,6 @@ function attachPlaybackService({stream, data, startTime, analyser}) {
     audio.currentTime = delta / 1000;
     audio.play();
   };
-
 
   return {stream, data, analyser, playback};
 }
@@ -231,9 +224,6 @@ function draw({analyser}) {
     analyser.getByteFrequencyData(data);
 
     if (now - accumulationStart > accumulationPeriod) {
-      // add accumulator to history
-      // const slice = document.createElement('slice');
-
       const slice = history.lastElementChild;
 
       for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
@@ -243,7 +233,6 @@ function draw({analyser}) {
 
       for (let i = 0; i < accumulator.length; i++) {
         const node = slice.children[i];
-        // const node = document.createElement('node');
 
         const averagedValue = Math.floor(accumulator[i] / accumulations);
 
@@ -348,14 +337,12 @@ function requestUpdateLoop() {
 function updateLoop() {
   processUpdates(updates);
   requestUpdateLoop();
-  // requestAnimationFrame(updateLoop);
 
   function processUpdates(updates) {
     const newUpdates = updates.map(update => update());
 
     updates.splice(0);
     updates.push(...newUpdates.filter(e => typeof e === 'function')); // should be this, but don't want to call typeof every time
-    // updates.push(...newUpdates);
   }
 }
 
