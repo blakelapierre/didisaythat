@@ -141,7 +141,10 @@ function attachAnalyser({stream, data, startTime}) {
   };
 
   history.mouseDown = event => {
-    console.log(event);
+    console.log('mouseDown', event);
+  };
+
+  history.mouseUp = event => {
     if (event.button === 0) {
       const slice = event.target.tagName === 'SLICE' ? event.target : event.target.parentNode;
 
