@@ -66,6 +66,7 @@ function attachRecorder(stream) {
   return {recorder, stream, data, startTime};
 
   function addData(event) {
+    // should write out file if >1min of data collected
     data.push(event.data);
     dataSize += event.data.size;
   }
