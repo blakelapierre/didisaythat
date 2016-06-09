@@ -6,6 +6,7 @@ navigator.getUserMedia = (navigator.getUserMedia ||
 const AudioContext = (window.AudioContext || webkitAudioContext);
 
 if (!navigator.getUserMedia) alert('No getUserMedia!');
+if (!navigator.mediaDevices) alert('No mediaDevices!');
 if (!AudioContext) alert('No AudioContext!');
 if (!MediaRecorder) alert('No MediaRecorder!');
 
@@ -16,6 +17,10 @@ const now = document.getElementById('now'),
       history = document.getElementById('history'),
       size = document.getElementById('size'),
       nowMenu = document.getElementById('now-menu');
+
+const audio = document.createElement('audio');
+
+document.body.insertBefore(audio, document.body.firstChild);
 
 getUserMedia({audio: true})
   .then(attachRecorder)
@@ -122,7 +127,7 @@ function attachAnalyser({stream, data, startTime}) {
     hasMenu = false;
     nowMenu.classList.remove('visible');
 
-    if (timer) {
+    if (event.button === 0 && timer) {
       clearTimeout(timer);
 
       nodes.classList.toggle('vertical');
@@ -168,10 +173,7 @@ function attachAnalyser({stream, data, startTime}) {
 
 let playback;
 function attachPlaybackService({stream, data, startTime, analyser}) {
-  const audio = document.createElement('audio');
-  document.body.appendChild(audio);
-
-  audio.volume = 1;
+  // document.body.appendChild(audio);
 
   playback = (time = startTime) => {
     const blob = new Blob(data);

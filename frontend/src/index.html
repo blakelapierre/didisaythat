@@ -4,50 +4,58 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Did I Say That?</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
 
     <link rel="stylesheet" href="app.css">
   </head>
   <body>
 
-    <now id="now"
-         onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
-         onclick="this.classList.toggle('vertical')"
-         onmousedown="return this.mouseDown(event)"
-         onmouseup="return this.mouseUp(event)"
-         onmousemove="return this.mouseMove(event)"
-         oncontextmenu="return this.cycleFFTSize()">
-      <nodes id="nodes" class="vertical">
-      </nodes>
+    <upper>
+      <now id="now"
+           onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
+           onclick="this.classList.toggle('vertical')"
+           onmousedown="return this.mouseDown(event)"
+           onmouseup="return this.mouseUp(event)"
+           onmousemove="return this.mouseMove(event)"
+           oncontextmenu="return this.cycleFFTSize()">
+        <nodes id="nodes" class="vertical">
+        </nodes>
 
-      <menu id="now-menu">
-        <bars>
+        <fullscreen onclick="requestFullScreen()"
+                    title="Go FullScreen">
+          <a1>
+            <up>↑</up>
+            <down>↑</down>
+          </a1>
+          <a2>
+            <left>↑</left>
+            <right>↑</right>
+          </a2>
+        </fullscreen>
+      </now>
+
+      <menu id="now-menu"
+            onmouseup="return this.previousElementSibling.mouseUp(event)">
+        <more-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize()">
         More Bars
-        </bars>
+        </more-bars>
+        <less-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize(true)">
+        Less Bars
+        <less-bars>
       </menu>
+    </upper>
 
-      <fullscreen onclick="requestFullScreen()"
-                  title="Go FullScreen">
-        <a1>
-          <up>↑</up>
-          <down>↑</down>
-        </a1>
-        <a2>
-          <left>↑</left>
-          <right>↑</right>
-        </a2>
-      </fullscreen>
-    </now>
+    <lower>
+      <history id="history"
+               onmousewheel="return cycleHistoryLength(event.deltaY < 0)"
+               onmousedown="return this.mouseDown(event)"
+               oncontextmenu="return cycleAccumulationPeriod()">
+      </history>
+      <playback-visuals></playback-visuals>
 
-    <history id="history"
-             onmousewheel="return cycleHistoryLength(event.deltaY < 0)"
-             onmousedown="return this.mouseDown(event)"
-             oncontextmenu="return cycleAccumulationPeriod()">
-    </history>
-    <playback-visuals></playback-visuals>
-
-    <size id="size"></size>
+      <size id="size"></size>
+    </lower>
 
     <script src="vendor.js"></script>
     <script src="app.js"></script>
