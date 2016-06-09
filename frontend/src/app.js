@@ -34,13 +34,11 @@ getUserMedia({audio: true})
 const smoothingTimeConstant = 0.66;
 
 const sizes = new Cycle([32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/]);
-const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64];
+const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64]);
 const historySizes = [10, 25, 50, 100, 175, 300, 500, 800, 1200];
 
-const sizesCycle = sizes.create();
-
-let currentAccumulationPeriodIndex = 3,
-    accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
+const sizesCycle = sizes.create(),
+      accumulationPeriodsCycle = accumulationPeriods.create();
 
 let currentHistorySizeIndex = 1,
     historyLength = historySizes[currentHistorySizeIndex];
@@ -223,7 +221,8 @@ function draw({analyser}) {
 
     analyser.getByteFrequencyData(data);
 
-    if (now - accumulationStart > accumulationPeriod) {
+    // if (now - accumulationStart > accumulationPeriod) {
+    if (now - accumulationStart > accumulationPeriodsCycle.value) {
       const slice = history.lastElementChild;
 
       for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
@@ -314,9 +313,7 @@ window.cycleHistoryLength = backwards => {
 };
 
 window.cycleAccumulationPeriod = () => {
-  currentAccumulationPeriodIndex = (currentAccumulationPeriodIndex + 1) % accumulationPeriods.length;
-
-  accumulationPeriod = accumulationPeriods[currentAccumulationPeriodIndex];
+  accumulationPeriodsCycle.goForward();
   return false;
 };
 
