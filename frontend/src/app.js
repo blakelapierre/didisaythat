@@ -61,7 +61,7 @@ function attachRecorder(stream) {
 
   recorder.ondataavailable = addData;
 
-  recorder.start();
+  recorder.start(1000);
 
   updates.push(updateSize);
 
