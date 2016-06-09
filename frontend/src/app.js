@@ -15,7 +15,7 @@ const audioContext = new AudioContext();
 const now = document.getElementById('now'),
       nodes = document.getElementById('nodes'),
       history = document.getElementById('history'),
-      size = document.getElementById('size'),
+      time = document.getElementById('time'),
       nowMenu = document.getElementById('now-menu');
 
 const audio = document.createElement('audio');
@@ -63,19 +63,19 @@ function attachRecorder(stream) {
 
   recorder.start(1000);
 
-  updates.push(updateSize);
+  updates.push(updateTime);
 
-  return {stream, data, startTime};
+  return {recorder, stream, data, startTime};
 
   function addData(event) {
     data.push(event.data);
     dataSize += event.data.size;
   }
 
-  function updateSize() {
-    size.innerHTML = dataSize;
+  function updateTime() {
+    time.innerHTML = `+${((new Date().getTime() - startTime) / 1000).toFixed(2)}s`;
 
-    return updateSize;
+    return updateTime;
   }
 }
 
