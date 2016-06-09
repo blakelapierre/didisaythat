@@ -35,13 +35,11 @@ const smoothingTimeConstant = 0.66;
 
 const sizes = new Cycle([32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/]);
 const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64]);
-const historySizes = [10, 25, 50, 100, 175, 300, 500, 800, 1200];
+const historySizes = new Cycle([10, 25, 50, 100, 175, 300, 500, 800, 1200]);
 
 const sizesCycle = sizes.create(),
-      accumulationPeriodsCycle = accumulationPeriods.create();
-
-let currentHistorySizeIndex = 1,
-    historyLength = historySizes[currentHistorySizeIndex];
+      accumulationPeriodsCycle = accumulationPeriods.create(),
+      historySizesCycle = historySizes.create();
 
 let data, accumulations = 0, accumulationStart = new Date().getTime();
 
@@ -195,7 +193,7 @@ function setAnalyserSize(analyser, size, nodes) {
 
   data = new Uint8Array(count);
 
-  setHistoryLength(historyLength);
+  setHistoryLength(historySizesCycle.value);
 
   for (let i = 0; i < count; i++) accumulator[i] = 0;
   accumulator.splice(count);
@@ -204,10 +202,8 @@ function setAnalyserSize(analyser, size, nodes) {
 }
 
 function setHistoryLength(length) {
-  historyLength = length;
-
-  for (let i = history.children.length; i < historyLength; i++) history.appendChild(document.createElement('slice'));
-  for (let i = history.children.length - 1; i >= historyLength; i--) history.children[i].remove();
+  for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
+  for (let i = history.children.length - 1; i >= length; i--) history.children[i].remove();
 }
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
@@ -307,9 +303,11 @@ window.requestFullScreen = () => {
   else if (document.body.msRequestFullScreen) document.body.msRequestFullScreen();
 };
 
-window.cycleHistoryLength = backwards => {
-  currentHistorySizeIndex = backwards ? (currentHistorySizeIndex > 0 ? currentHistorySizeIndex - 1 : historySizes.length - 1): (currentHistorySizeIndex + 1) % historySizes.length;
-  setHistoryLength(historySizes[currentHistorySizeIndex]);
+window.cycleHistorySize = backwards => {
+  if (backwards) historySizesCycle.goBackward();
+  else historySizesCycle.goForward();
+
+  setHistoryLength(historySizesCycle.value);
 };
 
 window.cycleAccumulationPeriod = () => {
