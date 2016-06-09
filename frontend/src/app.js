@@ -88,7 +88,14 @@ function attachAnalyser({stream, data, startTime}) {
   analyser.smoothingTimeConstant = smoothingTimeConstant;
   setAnalyserSize(analyser, sizes[currentSize], nodes);
 
-  source.connect(analyser);
+  const gain = audioContext.createGain();
+
+  gain.gain.value = 1;
+
+  source.connect(gain);
+  gain.connect(analyser);
+
+  // source.connect(analyser);
 
   now.cycleFFTSize = backwards => {
     if (backwards) {
