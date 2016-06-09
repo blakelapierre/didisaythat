@@ -106,8 +106,6 @@ function attachAnalyser({stream, data, startTime}) {
       currentSize = (currentSize + 1) % sizes.length;
     }
 
-    currentSize = currentSize % sizes.length;
-
     setAnalyserSize(analyser, sizes[currentSize], nodes);
 
     return false;
