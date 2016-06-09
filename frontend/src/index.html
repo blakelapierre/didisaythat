@@ -11,7 +11,9 @@
   </head>
   <body>
 
-    <upper>
+    <upper
+      ontouchstart="return this.firstElementChild.touchStart(event)"
+      ontouchend="return this.firstElementChild.touchEnd(event)">
       <now id="now"
            onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
            onclick="this.classList.toggle('vertical')"

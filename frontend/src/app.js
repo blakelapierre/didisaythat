@@ -140,6 +140,31 @@ function attachAnalyser({stream, data, startTime}) {
     }
   };
 
+  now.touchStart = event => {
+    hasMenu = true;
+    start.x = last.x = event.clientX;
+    start.y = last.y = event.clientY;
+
+    timer = setTimeout(() => {
+      if (hasMenu) nowMenu.classList.add('visible');
+      timer = undefined;
+    }, 125);
+  };
+
+  now.touchEnd = event => {
+    console.log(event);
+    hasMenu = false;
+    nowMenu.classList.remove('visible');
+
+    if (timer) {
+      clearTimeout(timer);
+
+      nodes.classList.toggle('vertical');
+
+      timer = undefined;
+    }
+  };
+
   history.mouseDown = event => {
     console.log('mouseDown', event);
   };
