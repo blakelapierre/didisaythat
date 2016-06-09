@@ -1,3 +1,5 @@
+import Cycle from './cycle';
+
 navigator.getUserMedia = (navigator.getUserMedia ||
                           navigator.webkitGetUserMedia ||
                           navigator.mozGetUserMedia ||
@@ -31,9 +33,11 @@ getUserMedia({audio: true})
 
 const smoothingTimeConstant = 0.66;
 
-const sizes = [32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/];
+const sizes = new Cycle([32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/]);
 const accumulationPeriods = [1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64];
 const historySizes = [10, 25, 50, 100, 175, 300, 500, 800, 1200];
+
+const sizesCycle = sizes.create();
 
 let currentSize = 0;
 
@@ -79,14 +83,13 @@ function attachRecorder(stream) {
   }
 }
 
-
 function attachAnalyser({stream, data, startTime}) {
   const source = audioContext.createMediaStreamSource(stream),
         analyser = audioContext.createAnalyser(),
         rate = audioContext.sampleRate;
 
   analyser.smoothingTimeConstant = smoothingTimeConstant;
-  setAnalyserSize(analyser, sizes[currentSize], nodes);
+  setAnalyserSize(analyser, sizesCycle.value, nodes);
 
   const gain = audioContext.createGain();
 
@@ -98,15 +101,10 @@ function attachAnalyser({stream, data, startTime}) {
   // source.connect(analyser);
 
   now.cycleFFTSize = backwards => {
-    if (backwards) {
-      currentSize = currentSize - 1;
-      if (currentSize < 0) currentSize = sizes.length - 1;
-    }
-    else {
-      currentSize = (currentSize + 1) % sizes.length;
-    }
+    if (backwards) sizesCycle.goBackward();
+    else sizesCycle.goForward();
 
-    setAnalyserSize(analyser, sizes[currentSize], nodes);
+    setAnalyserSize(analyser, sizesCycle.value, nodes);
 
     return false;
   };
