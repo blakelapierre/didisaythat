@@ -43,18 +43,6 @@
                oncontextmenu="return this.cycleFFTSize()">
             <nodes id="nodes" class="vertical">
             </nodes>
-
-            <fullscreen onclick="requestFullScreen()"
-                        title="Go FullScreen">
-              <a1>
-                <up>↑</up>
-                <down>↑</down>
-              </a1>
-              <a2>
-                <left>↑</left>
-                <right>↑</right>
-              </a2>
-            </fullscreen>
           </now>
 
           <menu id="now-menu"
@@ -79,6 +67,20 @@
 
           <time id="time"></time>
         </lower>
+
+        <overlay>
+          <fullscreen onclick="requestFullScreen()"
+                      title="Go FullScreen">
+            <a1>
+              <up>↑</up>
+              <down>↑</down>
+            </a1>
+            <a2>
+              <left>↑</left>
+              <right>↑</right>
+            </a2>
+          </fullscreen>
+        </overlay>
       </authorized>
     </capable>
 
