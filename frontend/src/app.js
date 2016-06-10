@@ -18,6 +18,12 @@ catch (e) {
   markNotCapable(e);
 }
 
+if (/android/i.test(navigator.userAgent)) {
+  const android = document.getElementsByTagName('android')[0];
+
+  android.style.display = 'flex';
+}
+
 function markNotCapable(reason) {
   const notCapable = document.getElementById('not-capable'),
         capable = document.getElementById('capable');
@@ -86,7 +92,7 @@ function attachRecorder(stream) {
 
   recorder.ondataavailable = addData;
 
-  recorder.start(1000);
+  recorder.start();
 
   updates.push(updateTime);
 
@@ -94,8 +100,10 @@ function attachRecorder(stream) {
 
   function addData(event) {
     // should write out file if >1min of data collected
-    data.push(event.data);
-    dataSize += event.data.size;
+    if (event.data.size > 0) {
+      data.push(event.data);
+      dataSize += event.data.size;
+    }
   }
 
   function updateTime() {
@@ -245,8 +253,6 @@ function attachPlaybackService({stream, data, startTime, analyser}) {
     const delta = time - startTime;
 
     const url = window.URL.createObjectURL(blob);
-
-    console.log('playback', time, delta, url);
 
     audio.src = url;
 

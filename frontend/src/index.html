@@ -96,6 +96,12 @@
           <span><seconds></seconds> <sup>''</sup></span>
           <span><milliseconds></milliseconds> <sub>ms</sub></span>
         </time>
+
+        <android onclick="this.style.display = 'none'">
+          <span>You appear to be using an Android device. You very likely need to ENABLE THE UNIFIED MEDIA PIPELINE ON ANDROID to be able to listen to your recordings from within this application. Without enabling this feature, the abilities this software provides you will be severely limited. Please complain to Google.</span>
+
+          <span>Go to the URL <a href="chrome://flags" target="_blank" title="Clicking this will do nothing, you must type chrome://flags into your browser!" onclick="alert('Clicking this will do nothing, you must type:\n\nchrome://flags\n\ninto your browser!')">chrome://flags</a> (clicking this will do nothing, you must type it into your browser!) and ENABLE THE UNIFIED MEDIA PIPELINE ON ANDROID. It may be very far down in the list of possible features to enable (try a "find on page for the word 'unified'"). You will likely need to restart Chrome and/or <a href="" onclick="window.location.reload">REFRESH THE PAGE</a> after enabling the feature.</span>
+        </android>
       </authorized>
     </capable>
 
