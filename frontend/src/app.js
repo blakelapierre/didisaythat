@@ -14,6 +14,10 @@ if (!MediaRecorder) alert('No MediaRecorder!');
 
 const audioContext = new AudioContext();
 
+const noPermission = document.getElementById('no-permission'),
+      authorized = document.getElementById('authorized'),
+      hint = noPermission.children[1];
+
 const now = document.getElementById('now'),
       nodes = document.getElementById('nodes'),
       history = document.getElementById('history'),
@@ -29,7 +33,7 @@ getUserMedia({audio: true})
   .then(attachAnalyser)
   .then(attachPlaybackService)
   .then(draw)
-  .catch(refresh);
+  .catch(mediaError);
 
 const smoothingTimeConstant = 0.66;
 
@@ -241,6 +245,9 @@ function setHistoryLength(length) {
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
 function draw({analyser}) {
+  noPermission.classList.add('granted');
+  authorized.classList.add('authorized');
+
   updates.push(update);
 
   requestUpdateLoop();
@@ -375,8 +382,11 @@ function updateLoop() {
   }
 }
 
-function refresh(error) {
+function mediaError(error) {
   console.log(error); // should report these?
+
+  if (error.name === 'PermissionDeniedError') return; //ignore for now
+
   if (confirm(`An error occurred! (${error.message} ${error.stack}) Reload?`)) {
     window.location.reload();
   }
