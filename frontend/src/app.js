@@ -235,7 +235,7 @@ function setAnalyserSize(analyser, size, nodes) {
 }
 
 function setHistoryLength(length) {
-  for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
+  // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
   for (let i = history.children.length - 1; i >= length; i--) history.children[i].remove();
 }
 
@@ -252,7 +252,8 @@ function draw({analyser}) {
 
     // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
-      const slice = history.lastElementChild;
+      console.log(history.children.length, historySizesCycle.value);
+      const slice = history.children.length >= historySizesCycle.value ? history.lastElementChild : document.createElement('slice');
 
       for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
       for (let i = slice.children.length - 1; i >= data.length; i--) slice.children[i].remove();
