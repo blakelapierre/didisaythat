@@ -110,6 +110,7 @@ function attachAnalyser({stream, data, startTime}) {
 
   now.mouseDown = event => {
     hasMenu = true;
+
     start.x = last.x = event.clientX;
     start.y = last.y = event.clientY;
 
@@ -150,10 +151,11 @@ function attachAnalyser({stream, data, startTime}) {
       if (hasMenu) nowMenu.classList.add('visible');
       timer = undefined;
     }, 125);
+
+    return false;
   };
 
   now.touchEnd = event => {
-    console.log(event);
     hasMenu = false;
     nowMenu.classList.remove('visible');
 
@@ -164,6 +166,8 @@ function attachAnalyser({stream, data, startTime}) {
 
       timer = undefined;
     }
+
+    return false;
   };
 
   history.mouseDown = event => {
