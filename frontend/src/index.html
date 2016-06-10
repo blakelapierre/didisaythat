@@ -10,63 +10,77 @@
     <link rel="stylesheet" href="app.css">
   </head>
   <body>
-    <no-permission id="no-permission">
-      <!-- <annoucement>Nothing will happen until the use of your microphone is allowed</annoucement> -->
-      <annoucement>Recording will begin when the use of your microphone is allowed</annoucement>
+    <not-capable id="not-capable">
+      <span>You are not able to use this software.</span>
 
-      <hint>If you have allowed the use of your microphone, try <a href="" onclick="window.location.reload(true)">REFRESHING THE PAGE</a></hint>
-    </no-permission>
+      <span>Please try again from an</span>
+      <a href="https://www.android.com/phones/"><img src="https://www.android.com/static/img/logos-2x/android-wordmark-8EC047.png"></a>
+      <span>device, or from one of these browsers:</span>
 
-    <authorized id="authorized">
-      <upper
-        ontouchstart="return this.firstElementChild.touchStart(event)"
-        ontouchend="return this.firstElementChild.touchEnd(event)">
-        <now id="now"
-             onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
-             onclick="this.classList.toggle('vertical')"
-             onmousedown="return this.mouseDown(event)"
-             onmouseup="return this.mouseUp(event)"
-             onmousemove="return this.mouseMove(event)"
-             oncontextmenu="return this.cycleFFTSize()">
-          <nodes id="nodes" class="vertical">
-          </nodes>
+      <a href="https://www.google.com/chrome/"><img src="https://www.google.com/chrome/assets/common/images/chrome_logo_2x.png?mmfb=a5234ae3c4265f687c7fffae2760a907"></a>
 
-          <fullscreen onclick="requestFullScreen()"
-                      title="Go FullScreen">
-            <a1>
-              <up>↑</up>
-              <down>↑</down>
-            </a1>
-            <a2>
-              <left>↑</left>
-              <right>↑</right>
-            </a2>
-          </fullscreen>
-        </now>
+      <a href="https://www.mozilla.org/en-US/firefox/new/"><img src="https://www.mozilla.org/media/img/firefox/template/header-logo-inverse.510f97e92635.png"></a>
+    </not-capable>
 
-        <menu id="now-menu"
-              onmouseup="return this.previousElementSibling.mouseUp(event)">
-          <more-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize()">
-          More Bars
-          </more-bars>
-          <less-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize(true)">
-          Less Bars
-          <less-bars>
-        </menu>
-      </upper>
+    <capable id="capable">
+      <no-permission id="no-permission">
+        <!-- <annoucement>Nothing will happen until the use of your microphone is allowed</annoucement> -->
+        <annoucement>Recording will begin when the use of your microphone is allowed</annoucement>
 
-      <lower>
-        <history id="history"
-                 onmousewheel="return cycleHistorySize(event.deltaY < 0)"
-                 onmousedown="return this.mouseDown(event)"
-                 onmouseup="return this.mouseUp(event)"
-                 oncontextmenu="return cycleAccumulationPeriod()">
-        </history>
-        <playback-visuals></playback-visuals>
+        <hint>If you have allowed the use of your microphone, try <a href="" onclick="window.location.reload(true)">REFRESHING THE PAGE</a></hint>
+      </no-permission>
 
-        <time id="time"></time>
-      </lower>
-    </authorized>
+      <authorized id="authorized">
+        <upper
+          ontouchstart="return this.firstElementChild.touchStart(event)"
+          ontouchend="return this.firstElementChild.touchEnd(event)">
+          <now id="now"
+               onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
+               onclick="this.classList.toggle('vertical')"
+               onmousedown="return this.mouseDown(event)"
+               onmouseup="return this.mouseUp(event)"
+               onmousemove="return this.mouseMove(event)"
+               oncontextmenu="return this.cycleFFTSize()">
+            <nodes id="nodes" class="vertical">
+            </nodes>
+
+            <fullscreen onclick="requestFullScreen()"
+                        title="Go FullScreen">
+              <a1>
+                <up>↑</up>
+                <down>↑</down>
+              </a1>
+              <a2>
+                <left>↑</left>
+                <right>↑</right>
+              </a2>
+            </fullscreen>
+          </now>
+
+          <menu id="now-menu"
+                onmouseup="return this.previousElementSibling.mouseUp(event)">
+            <more-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize()">
+            More Bars
+            </more-bars>
+            <less-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize(true)">
+            Less Bars
+            <less-bars>
+          </menu>
+        </upper>
+
+        <lower>
+          <history id="history"
+                   onmousewheel="return cycleHistorySize(event.deltaY < 0)"
+                   onmousedown="return this.mouseDown(event)"
+                   onmouseup="return this.mouseUp(event)"
+                   oncontextmenu="return cycleAccumulationPeriod()">
+          </history>
+          <playback-visuals></playback-visuals>
+
+          <time id="time"></time>
+        </lower>
+      </authorized>
+    </capable>
 
     <script src="vendor.js"></script>
     <script src="app.js"></script>

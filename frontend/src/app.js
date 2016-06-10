@@ -1,16 +1,34 @@
 import Cycle from './cycle';
 
-navigator.getUserMedia = (navigator.getUserMedia ||
-                          navigator.webkitGetUserMedia ||
-                          navigator.mozGetUserMedia ||
-                          navigator.msGetUserMedia);
 
-const AudioContext = (window.AudioContext || webkitAudioContext);
+try {
+  navigator.getUserMedia = (navigator.getUserMedia ||
+                            navigator.webkitGetUserMedia ||
+                            navigator.mozGetUserMedia ||
+                            navigator.msGetUserMedia);
 
-if (!navigator.getUserMedia) alert('No getUserMedia!');
-if (!navigator.mediaDevices) alert('No mediaDevices!');
-if (!AudioContext) alert('No AudioContext!');
-if (!MediaRecorder) alert('No MediaRecorder!');
+  const AudioContext = (window.AudioContext || webkitAudioContext);
+
+  if (!navigator.getUserMedia) markNotCapable('No getUserMedia!');
+  if (!navigator.mediaDevices) markNotCapable('No mediaDevices!');
+  if (!AudioContext) markNotCapable('No AudioContext!');
+  if (!MediaRecorder) markNotCapable('No MediaRecorder!');
+}
+catch (e) {
+  markNotCapable(e);
+}
+
+function markNotCapable(reason) {
+  const notCapable = document.getElementById('not-capable'),
+        capable = document.getElementById('capable');
+
+  notCapable.style.display = 'flex';
+  capable.style.display = 'none';
+
+  notCapable.appendChild(document.createTextNode(reason));
+
+  // alert(reason);
+}
 
 const audioContext = new AudioContext();
 
