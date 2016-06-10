@@ -42,6 +42,11 @@ const now = document.getElementById('now'),
       time = document.getElementById('time'),
       nowMenu = document.getElementById('now-menu');
 
+const hoursEl = document.getElementsByTagName('hours')[0],
+      minutesEl = document.getElementsByTagName('minutes')[0],
+      secondsEl = document.getElementsByTagName('seconds')[0],
+      millisecondsEl = document.getElementsByTagName('milliseconds')[0];
+
 const audio = document.createElement('audio');
 
 document.body.insertBefore(audio, document.body.firstChild);
@@ -94,7 +99,19 @@ function attachRecorder(stream) {
   }
 
   function updateTime() {
-    time.innerHTML = `+${((new Date().getTime() - startTime) / 1000).toFixed(2)}s`;
+    const duration = new Date().getTime() - startTime,
+          milliseconds = duration % 1000,
+          totalSeconds = Math.floor(duration / 1000),
+          seconds = totalSeconds % 60,
+          minutes = Math.floor(totalSeconds / 60);
+
+    hoursEl.innerHTML = 0;
+    minutesEl.innerHTML = minutes;
+    secondsEl.innerHTML = seconds;
+    millisecondsEl.innerHTML = milliseconds < 100 ? (milliseconds < 10 ? `00${milliseconds}` : `0${milliseconds}`) : milliseconds;
+
+    // time.innerHTML = `${minutes > 0 ? minutes + " " : ''}${seconds > 0 ? seconds + "  " : ''}${milliseconds}`;
+    // time.innerHTML = `+${((duration) / 1000).toFixed(2)}s`;
 
     return updateTime;
   }
@@ -316,18 +333,6 @@ function draw({analyser}) {
 
     let sum = 0;
 
-
-    const slice = history.children[0];
-    for (let i = 0; i < accumulator.length; i++) {
-      const node = slice.children[i];
-
-      const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
-
-      // node.style.backgroundColor = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
-
-      node.style.opacity = averagedValue / 255;
-    }
-
     for (let i= 0; i < nodes.children.length; i++) {
       const  child = nodes.children[i];
 
@@ -343,6 +348,15 @@ function draw({analyser}) {
 
       child.style.width = width;
       child.style.height = height;
+    }
+
+    const slice = history.children[0];
+    for (let i = 0; i < accumulator.length; i++) {
+      const node = slice.children[i];
+
+      const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
+
+      node.style.opacity = averagedValue / 255;
     }
 
     const total = sum / nodes.children.length;
@@ -376,6 +390,10 @@ window.cycleAccumulationPeriod = () => {
 
 window.wheel = event => {
   console.log('wheel', event);
+};
+
+window.storage = () => {
+  authorized.classList.toggle('storage');
 };
 
 document.body.addEventListener('webkitfullscreenchange', event => {
