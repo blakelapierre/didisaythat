@@ -71,12 +71,6 @@
             <span><seconds></seconds> <sup>x1000 +</sup></span>
             <span><milliseconds></milliseconds> <sub>ms</sub></span>
           </time> -->
-          <time id="time">
-            <span><hours></hours> <sup>°</sup></span>
-            <span><minutes></minutes> <sup>'</sup></span>
-            <span><seconds></seconds> <sup>''</sup></span>
-            <span><milliseconds></milliseconds> <sub>ms</sub></span>
-          </time>
         </lower>
 
         <storage-panel>
@@ -84,7 +78,6 @@
         </storage-panel>
 
         <overlay>
-          <storage onclick="storage()"><icon>-</icon></storage>
           <fullscreen onclick="requestFullScreen()"
                       title="Go FullScreen">
             <a1>
@@ -96,8 +89,13 @@
               <right>↑</right>
             </a2>
           </fullscreen>
-
         </overlay>
+        <time id="time" onclick="storage()">
+          <span><hours></hours> <sup>°</sup></span>
+          <span><minutes></minutes> <sup>'</sup></span>
+          <span><seconds></seconds> <sup>''</sup></span>
+          <span><milliseconds></milliseconds> <sub>ms</sub></span>
+        </time>
       </authorized>
     </capable>
 

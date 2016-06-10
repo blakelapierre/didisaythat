@@ -128,10 +128,14 @@ body {
         storage-panel {
           display: block;
         }
+
+        time {
+          font-size: 1em;
+        }
       }
 
       upper, lower {
-        transition: all 0.5s ease-in-out;
+        transition: all 0.15s ease-in-out;
       }
 
       upper {
@@ -493,6 +497,34 @@ body {
 
             color: rgba(220, 255, 200, 0.8);
           }
+        }
+      }
+
+      time {
+        position: absolute;
+
+        bottom: 0;
+        right: 0;
+
+        padding-top: 1em;
+
+        font-size: 0.75em;
+
+        color: #fff;
+
+        text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 0.5em;
+
+        cursor: pointer;
+
+        transition: all 0.15s ease-in-out;
+
+        span {
+          margin: 0;
+        }
+
+        sup, sub, plus {
+          margin: 0;
+          font-size: 0.75em;
         }
       }
     }
