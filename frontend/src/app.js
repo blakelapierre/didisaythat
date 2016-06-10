@@ -63,7 +63,7 @@ const sizesCycle = sizes.create(),
       accumulationPeriodsCycle = accumulationPeriods.create(),
       historySizesCycle = historySizes.create();
 
-let data, accumulations = 0, accumulationStart = new Date().getTime();
+let data, accumulations = 0, accumulationStart = -1000;
 
 const accumulator = [];
 
@@ -275,32 +275,20 @@ function draw({analyser}) {
 
     analyser.getByteFrequencyData(data);
 
+
     // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
-      console.log(history.children.length, historySizesCycle.value);
       const slice = history.children.length >= historySizesCycle.value ? history.lastElementChild : document.createElement('slice');
-
       for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
       for (let i = slice.children.length - 1; i >= data.length; i--) slice.children[i].remove();
 
       slice.approximateTime = now;
 
-      for (let i = 0; i < accumulator.length; i++) {
-        const node = slice.children[i];
+      for (let i = 0; i < accumulator.length; i++) accumulator[i] = 0;
 
-        const averagedValue = Math.floor(accumulator[i] / accumulations);
-
-        // node.style.backgroundColor = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
-
-        node.style.opacity = averagedValue / 255;
-
-        slice.classList.remove('mover');
-        slice.classList.remove('start');
-        slice.classList.remove('end');
-        slice.insertBefore(node, slice.firstChild);
-
-        accumulator[i] = 0;
-      }
+      slice.classList.remove('mover');
+      slice.classList.remove('start');
+      slice.classList.remove('end');
 
       if (indicators.mover) {
         indicators.mover.classList.remove('mover');
@@ -320,13 +308,25 @@ function draw({analyser}) {
 
       history.insertBefore(slice, history.firstChild);
 
-      accumulations = 0;
+      accumulations = 1;
       accumulationStart = now;
     }
 
     const vertical = nodes.className === 'vertical';
 
     let sum = 0;
+
+
+    const slice = history.children[0];
+    for (let i = 0; i < accumulator.length; i++) {
+      const node = slice.children[i];
+
+      const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
+
+      // node.style.backgroundColor = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
+
+      node.style.opacity = averagedValue / 255;
+    }
 
     for (let i= 0; i < nodes.children.length; i++) {
       const  child = nodes.children[i];
