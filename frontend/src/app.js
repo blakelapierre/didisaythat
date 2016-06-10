@@ -64,6 +64,7 @@ getUserMedia({audio: true})
   .then(draw)
   .catch(mediaError);
 
+const saveBlockTime = 60 * 1000; // one minute
 const smoothingTimeConstant = 0.66;
 
 const sizes = new Cycle([32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/]);
@@ -85,10 +86,14 @@ function getUserMedia(options) {
 
 function attachRecorder(stream) {
   const recorder = new MediaRecorder(stream),
-        startTime = new Date().getTime(),
-        data = [];
+        startTime = new Date().getTime();
 
-  let dataSize = 0;
+  const savedBlobs = [];
+
+  let data = [];
+  let dataSize = 0,
+      totalDataSize = 0,
+      lastSaveTime = startTime;
 
   recorder.ondataavailable = addData;
 
@@ -103,6 +108,22 @@ function attachRecorder(stream) {
     if (event.data.size > 0) {
       data.push(event.data);
       dataSize += event.data.size;
+      totalDataSize += event.data.size;
+    }
+
+    const now = new Date().getTime();
+
+    if (now - lastSaveTime > saveBlockTime) {
+      const blob = new Blob(data);
+
+      savedBlobs.push(blob);
+
+      data = [];
+      dataSize = 0;
+
+      lastSaveTime = now;
+
+      console.log({savedBlobs});
     }
   }
 
