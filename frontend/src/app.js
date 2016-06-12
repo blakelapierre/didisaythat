@@ -53,18 +53,32 @@ const hoursEl = document.getElementsByTagName('hours')[0],
       secondsEl = document.getElementsByTagName('seconds')[0],
       millisecondsEl = document.getElementsByTagName('milliseconds')[0];
 
+const storagePanel = document.getElementsByTagName('storage-panel')[0];
+
 const audio = document.createElement('audio');
 
 document.body.insertBefore(audio, document.body.firstChild);
 
+// getUserMedia({
+//   "audio": {
+//     "mandatory": {
+//         "googEchoCancellation": "false",
+//         "googAutoGainControl": "false",
+//         "googNoiseSuppression": "false",
+//         "googHighpassFilter": "false"
+//     },
+//     "optional": []
+//    },
+// })
 getUserMedia({audio: true})
   .then(attachRecorder)
   .then(attachAnalyser)
-  .then(attachPlaybackService)
+  // .then(attachPlaybackService)
   .then(draw)
   .catch(mediaError);
 
-const saveBlockTime = 60 * 1000; // one minute
+// const saveBlockTime = 60 * 1000; // one minute
+const saveBlockTime = 5 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
 const sizes = new Cycle([32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/]);
@@ -84,48 +98,180 @@ function getUserMedia(options) {
   return new Promise((resolve, reject) => navigator.getUserMedia(options, resolve, reject));
 }
 
-function attachRecorder(stream) {
-  const recorder = new MediaRecorder(stream),
-        startTime = new Date().getTime();
 
-  const savedBlobs = [];
+function play(blob, position = 0) {
+  console.log(blob);
+  const url = window.URL.createObjectURL(blob);
+
+  audio.src = url;
+
+  audio.currentTime = position / 1000;
+  audio.play();
+}
+
+
+let playback;
+let shouldFinalize = false;
+let callWhenFinalized;
+function attachRecorder(stream) {
+  let currentRecorder = new MediaRecorder(stream),
+      nextRecorder = new MediaRecorder(stream);
+
+  const startTime = new Date().getTime(),
+        savedBlobs = [];
 
   let data = [];
   let dataSize = 0,
       totalDataSize = 0,
       lastSaveTime = startTime;
 
-  recorder.ondataavailable = addData;
-
-  recorder.start();
+  currentRecorder.ondataavailable = makeDataHandler(currentRecorder);
+  currentRecorder.start();
 
   updates.push(updateTime);
 
-  return {recorder, stream, data, startTime};
+  playback = (time = lastSaveTime) => {
 
-  function addData(event) {
-    // should write out file if >1min of data collected
-    if (event.data.size > 0) {
+    let delta = time - lastSaveTime;
+
+    if (delta < 0) { // is this the right boundary?
+
+      delta = 0;
+    }
+
+    // shouldFinalize = true;
+    // recorder.requestData();
+
+    // recorder.stop();
+    // secondRecorder.start();
+
+    // callWhenFinalized = blob => play(blob, delta);
+
+    console.log(lastSaveTime, delta, data);
+
+    // const blob = new Blob([savedBlobs[0], data]);
+    // const url = window.URL.createObjectURL(blob);
+
+    // audio.src = url;
+
+    // audio.currentTime = delta / 1000;
+    // audio.play();
+  };
+
+  return {currentRecorder, nextRecorder, stream, data, lastSaveTime};
+
+  function makeDataHandler(r) {
+    const recorder = r;
+    let data = [],
+        finalize = false;
+
+    console.log(recorder, r);
+
+    return event => {
+      const now = new Date().getTime();
+
       data.push(event.data);
-      dataSize += event.data.size;
-      totalDataSize += event.data.size;
-    }
 
-    const now = new Date().getTime();
+      console.log(r.state);
 
-    if (now - lastSaveTime > saveBlockTime) {
-      const blob = new Blob(data);
+      if (finalize) {
+        savedBlobs.push([now, new Blob(data)]);
+        lastSaveTime = now;
 
-      savedBlobs.push(blob);
+        data.splice(0);
 
-      data = [];
-      dataSize = 0;
+        console.log('finalized');
+      }
+      else if (now - lastSaveTime > saveBlockTime) {
+        console.log('should finalize');
 
-      lastSaveTime = now;
+        finalize = true;
 
-      console.log({savedBlobs});
-    }
+        if (r.state !== 'inactive') {
+          console.log('switching recorders');
+          r.stop(); // should be a different condition
+        }
+
+        nextRecorder.ondataavailable = makeDataHandler(nextRecorder);
+        nextRecorder.start();
+
+        const tmp = currentRecorder;
+
+        currentRecorder = nextRecorder;
+        nextRecorder = tmp;
+      }
+    };
   }
+
+  // function addData(event) {
+  //   const now = new Date().getTime();
+
+  //   data.push(event.data);
+
+  //   if (now - lastSaveTime > saveBlockTime) {
+  //     currentRecorder.stop();
+
+  //     nextRecorder.ondataavailable = addData;
+  //     nextRecorder.start();
+  //   }
+  // }
+
+  // function addData(event) {
+  //   const now = new Date().getTime();
+
+  //   data.push(event.data);
+
+  //   if (now - lastSaveTime > saveBlockTime) shouldFinalize = true;
+
+  //   if (shouldFinalize) {
+  //     const blob = new Blob(data/*, {type: 'audio/webm;codecs=opus'}*/);
+  //     savedBlobs.push([lastSaveTime, blob]);
+
+  //     data = [];
+  //     dataSize = 0;
+  //     lastSaveTime = new Date().getTime();
+
+  //     const record = document.createElement('record');
+  //     record.innerHTML = `${lastSaveTime}, ${blob.size} record`;
+  //     storagePanel.appendChild(record);
+
+  //     record.addEventListener('click', () => {
+  //       play(blob);
+  //     });
+
+  //     if (callWhenFinalized) {
+  //       callWhenFinalized(blob);
+  //       callWhenFinalized = undefined;
+  //     }
+
+  //     console.log('finalized', savedBlobs);
+  //   }
+
+  // }
+
+  // function addData(event) {
+  //   // should write out file if >1min of data collected
+  //   if (event.data.size > 0) {
+  //     data.push(event.data);
+  //     dataSize += event.data.size;
+  //     totalDataSize += event.data.size;
+  //   }
+
+  //   const now = new Date().getTime();
+
+  //   if (now - lastSaveTime > saveBlockTime) {
+  //     const blob = new Blob(data);
+
+  //     savedBlobs.push([lastSaveTime, blob]) ;
+
+  //     data = [];
+  //     dataSize = 0;
+
+  //     lastSaveTime = now;
+
+  //     console.log({savedBlobs});
+  //   }
+  // }
 
   function updateTime() {
     const duration = new Date().getTime() - startTime,
@@ -146,7 +292,7 @@ function attachRecorder(stream) {
   }
 }
 
-function attachAnalyser({stream, data, startTime}) {
+function attachAnalyser({stream, data, lastSaveTime}) {
   const source = audioContext.createMediaStreamSource(stream),
         analyser = audioContext.createAnalyser(),
         rate = audioContext.sampleRate;
@@ -263,25 +409,7 @@ function attachAnalyser({stream, data, startTime}) {
     }
   };
 
-  return {stream, data, startTime, analyser};
-}
-
-
-let playback;
-function attachPlaybackService({stream, data, startTime, analyser}) {
-  playback = (time = startTime) => {
-    const blob = new Blob(data);
-    const delta = time - startTime;
-
-    const url = window.URL.createObjectURL(blob);
-
-    audio.src = url;
-
-    audio.currentTime = delta / 1000;
-    audio.play();
-  };
-
-  return {stream, data, analyser, playback};
+  return {stream, data, lastSaveTime, analyser};
 }
 
 function setAnalyserSize(analyser, size, nodes) {
@@ -378,7 +506,7 @@ function draw({analyser}) {
     }
 
     const slice = history.children[0];
-    for (let i = 0; i < accumulator.length; i++) {
+    for (let i = 0; i < slice.children.length; i++) {
       const node = slice.children[i];
 
       const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
