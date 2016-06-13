@@ -35,22 +35,22 @@
           ontouchstart="return this.firstElementChild.touchStart(event)"
           ontouchend="return this.firstElementChild.touchEnd(event)">
           <now id="now"
-               onmousewheel="return this.cycleFFTSize(event.deltaY < 0)"
+               onmousewheel="return this.cycleBarCount(event.deltaY < 0)"
                onclick="this.classList.toggle('vertical')"
                onmousedown="return this.mouseDown(event)"
                onmouseup="return this.mouseUp(event)"
                onmousemove="return this.mouseMove(event)"
-               oncontextmenu="return this.cycleFFTSize()">
+               oncontextmenu="return this.cycleBarCount()">
             <nodes id="nodes" class="vertical">
             </nodes>
           </now>
 
           <menu id="now-menu"
                 onmouseup="return this.previousElementSibling.mouseUp(event)">
-            <more-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize()">
+            <more-bars onmouseup="this.parentNode.previousElementSibling.cycleBarCount()">
             More Bars
             </more-bars>
-            <less-bars onmouseup="this.parentNode.previousElementSibling.cycleFFTSize(true)">
+            <less-bars onmouseup="this.parentNode.previousElementSibling.cycleBarCount(true)">
             Less Bars
             <less-bars>
           </menu>

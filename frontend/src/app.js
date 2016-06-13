@@ -81,11 +81,11 @@ getUserMedia({audio: true})
 const saveBlockTime = 5 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
-const sizes = new Cycle([32, 64, 128, 256, 512, 1024, 2048, /*4096, 8192, 16384, 32768*/]);
+const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/*, 16384, 32768*/]);
 const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64]);
 const historySizes = new Cycle([10, 25, 50, 100, 175, 300, 500, 800, 1200]);
 
-const sizesCycle = sizes.create(),
+const barCountCycle = barCounts.create(),
       accumulationPeriodsCycle = accumulationPeriods.create(),
       historySizesCycle = historySizes.create();
 
@@ -107,6 +107,12 @@ function play(blob, position = 0) {
 
   audio.currentTime = position / 1000;
   audio.play();
+}
+
+function attachRecorder(stream) {
+
+
+  return {recorder, stream};
 }
 
 
@@ -165,14 +171,14 @@ function attachRecorder(stream) {
     let data = [],
         finalize = false;
 
-    console.log(recorder, r);
+    // console.log(recorder, r);
 
     return event => {
       const now = new Date().getTime();
 
       data.push(event.data);
 
-      console.log(r.state);
+      // console.log(r.state);
 
       if (finalize) {
         savedBlobs.push([now, new Blob(data)]);
@@ -180,7 +186,7 @@ function attachRecorder(stream) {
 
         data.splice(0);
 
-        console.log('finalized');
+        // console.log('finalized');
       }
       else if (now - lastSaveTime > saveBlockTime) {
         console.log('should finalize');
@@ -298,7 +304,7 @@ function attachAnalyser({stream, data, lastSaveTime}) {
         rate = audioContext.sampleRate;
 
   analyser.smoothingTimeConstant = smoothingTimeConstant;
-  setAnalyserSize(analyser, sizesCycle.value, nodes);
+  setAnalyserSize(analyser, barCountCycle.value, nodes);
 
   const gain = audioContext.createGain();
 
@@ -307,11 +313,11 @@ function attachAnalyser({stream, data, lastSaveTime}) {
   source.connect(gain);
   gain.connect(analyser);
 
-  now.cycleFFTSize = backwards => {
-    if (backwards) sizesCycle.goBackward();
-    else sizesCycle.goForward();
+  now.cycleBarCount = backwards => {
+    if (backwards) barCountCycle.goBackward();
+    else barCountCycle.goForward();
 
-    setAnalyserSize(analyser, sizesCycle.value, nodes);
+    setAnalyserSize(analyser, barCountCycle.value, nodes);
 
     return false;
   };
@@ -413,17 +419,20 @@ function attachAnalyser({stream, data, lastSaveTime}) {
 }
 
 function setAnalyserSize(analyser, size, nodes) {
-  analyser.fftSize = size;
+  let fftSize = Math.max(32, Math.min(32768, size * 4));
+
+  analyser.fftSize = fftSize;
 
   const bins = analyser.frequencyBinCount,
-        count = bins / 2;
+        count = Math.min(bins / 2, size);
 
-  data = new Uint8Array(count);
+  data = new Uint8Array(bins / 2);
 
-  setHistoryLength(historySizesCycle.value);
+  // setHistoryLength(historySizesCycle.value);
 
   for (let i = 0; i < count; i++) accumulator[i] = 0;
   accumulator.splice(count);
+
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
 }
@@ -434,6 +443,7 @@ function setHistoryLength(length) {
 }
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
+
 function draw({analyser}) {
   noPermission.classList.add('granted');
   authorized.classList.add('authorized');
@@ -451,8 +461,8 @@ function draw({analyser}) {
     // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
       const slice = history.children.length >= historySizesCycle.value ? history.lastElementChild : document.createElement('slice');
-      for (let i = slice.children.length; i < data.length; i++) slice.appendChild(document.createElement('node'));
-      for (let i = slice.children.length - 1; i >= data.length; i--) slice.children[i].remove();
+      for (let i = slice.children.length; i < nodes.children.length; i++) slice.appendChild(document.createElement('node'));
+      for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[i].remove();
 
       slice.approximateTime = now;
 
@@ -488,21 +498,79 @@ function draw({analyser}) {
 
     let sum = 0;
 
-    for (let i= 0; i < nodes.children.length; i++) {
-      const  child = nodes.children[i];
+    const barsCount = nodes.children.length;
 
-      const value = data[i];
+    if (barsCount === 1) {
+      const child = nodes.children[0];
 
-      sum += value;
-      accumulator[i] += value;
+      const total = data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7],
+            average = total / 8;
 
-      child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
+      accumulator[0] += average;
 
-      const width = vertical ? `${value / 255 * 100}%` : 'auto',
-            height = vertical ? 'auto' : `${value / 255 * 100}%`;
+      child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
+
+      const width = vertical ? `${average / 255 * 100}%` : 'auto',
+            height = vertical ? 'auto' : `${average / 255 * 100}%`;
 
       child.style.width = width;
       child.style.height = height;
+    }
+    else if (barsCount === 2) {
+      for (let i= 0; i < nodes.children.length; i++) {
+        const child = nodes.children[i];
+
+        const total = data[4 * i] + data[4 * i + 1] + data[4 * i + 2] + data[4 * i + 3],
+              average = total / 4;
+
+        sum += average;
+        accumulator[i] += average;
+
+        child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
+
+        const width = vertical ? `${average / 255 * 100}%` : 'auto',
+              height = vertical ? 'auto' : `${average / 255 * 100}%`;
+
+        child.style.width = width;
+        child.style.height = height;
+      }
+    }
+    else if (barsCount === 4) {
+      for (let i= 0; i < nodes.children.length; i++) {
+        const child = nodes.children[i];
+
+        const total = data[2 * i] + data[2 * i + 1],
+              average = total / 2;
+
+        sum += average;
+        accumulator[i] += average;
+
+        child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
+
+        const width = vertical ? `${average / 255 * 100}%` : 'auto',
+              height = vertical ? 'auto' : `${average / 255 * 100}%`;
+
+        child.style.width = width;
+        child.style.height = height;
+      }
+    }
+    else {
+      for (let i= 0; i < nodes.children.length; i++) {
+        const  child = nodes.children[i];
+
+        const value = data[i];
+
+        sum += value;
+        accumulator[i] += value;
+
+        child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
+
+        const width = vertical ? `${value / 255 * 100}%` : 'auto',
+              height = vertical ? 'auto' : `${value / 255 * 100}%`;
+
+        child.style.width = width;
+        child.style.height = height;
+      }
     }
 
     const slice = history.children[0];
