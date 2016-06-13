@@ -430,6 +430,8 @@ function setAnalyserSize(analyser, size, nodes) {
 
   // setHistoryLength(historySizesCycle.value);
 
+  // need to distribute current accumulations
+
   for (let i = 0; i < count; i++) accumulator[i] = 0;
   accumulator.splice(count);
 
