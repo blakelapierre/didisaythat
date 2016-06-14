@@ -115,7 +115,7 @@ function attachRecorder(stream) {
   return {recorder, stream};
 }
 
-
+let dataCount = 0;
 let playback;
 let shouldFinalize = false;
 let callWhenFinalized;
@@ -173,10 +173,12 @@ function attachRecorder(stream) {
 
     // console.log(recorder, r);
 
+    const reader = new FileReader();
+
     return event => {
       const now = new Date().getTime();
 
-      data.push(event.data);
+      if (event.data.size > 0) data.push(event.data);
 
       // console.log(r.state);
 
@@ -185,6 +187,14 @@ function attachRecorder(stream) {
         lastSaveTime = now;
 
         data.splice(0);
+        if (dataCount++ < 3) console.log(savedBlobs);
+
+        finalize = false;
+
+        const blob = savedBlobs[savedBlobs.length - 1][1];
+        reader.readAsBinaryString(blob.slice(0, 2048));
+
+        reader.onload = event => console.log(blob, event, reader.result);
 
         // console.log('finalized');
       }
@@ -193,18 +203,18 @@ function attachRecorder(stream) {
 
         finalize = true;
 
-        if (r.state !== 'inactive') {
-          console.log('switching recorders');
-          r.stop(); // should be a different condition
-        }
+        // if (r.state !== 'inactive') {
+        //   console.log('switching recorders');
+        //   r.stop(); // should be a different condition
+        // }
 
-        nextRecorder.ondataavailable = makeDataHandler(nextRecorder);
-        nextRecorder.start();
+        // nextRecorder.ondataavailable = makeDataHandler(nextRecorder);
+        // nextRecorder.start();
 
-        const tmp = currentRecorder;
+        // const tmp = currentRecorder;
 
-        currentRecorder = nextRecorder;
-        nextRecorder = tmp;
+        // currentRecorder = nextRecorder;
+        // nextRecorder = tmp;
       }
     };
   }
@@ -432,6 +442,20 @@ function setAnalyserSize(analyser, size, nodes) {
 
   // need to distribute current accumulations
 
+  if (count > accumulator.length) {
+    //growing, split
+    const levels = count / ((2 * accumulator.length) || 1);
+
+    console.log({levels, count, accumulator: accumulator.length});
+
+    for (let i = count - 1; i >= 0; i--) {
+
+    }
+  }
+  else {
+    //shrinking, combine
+  }
+
   for (let i = 0; i < count; i++) accumulator[i] = 0;
   accumulator.splice(count);
 
@@ -458,7 +482,6 @@ function draw({analyser}) {
     const now = new Date().getTime();
 
     analyser.getByteFrequencyData(data);
-
 
     // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
