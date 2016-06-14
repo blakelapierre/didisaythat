@@ -531,6 +531,7 @@ function draw({analyser}) {
       const total = data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7],
             average = total / 8;
 
+      // sum += av; // we want the background to be black in this case (barsCount === 1) [code needs some reworking]
       accumulator[0] += average;
 
       child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;

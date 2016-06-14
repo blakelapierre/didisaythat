@@ -15,6 +15,7 @@ const {dependencies} = require('./package.json'),
         concat,
         imagemin,
         jshint,
+        jsonMinify,
         less,
         lessReporter,
         minifyCss,
@@ -39,7 +40,7 @@ let p = name => print(file => console.log(name, file));
 gulp.task('default', ['build']);
 
 gulp.task('build', sequence(['clean:rev', 'clean:dist'],
-                            ['js:vendor', 'js:app', 'html', 'images', 'styles', 'fonts'],
+                            ['js:vendor', 'js:app', 'html', 'images', 'styles', 'fonts', 'json'],
                             ['minify:css', 'minify:html', 'minify:js', 'minify:images'],
                             'rev'));
 
@@ -47,7 +48,7 @@ gulp.task('dev', cb => {
   const {src} = paths;
 
   sequence('clean:dev',
-          ['js:vendor', 'js:app', 'html', 'images'],
+          ['js:vendor', 'js:app', 'html', 'images', 'json'],
           'styles',
           'browser-sync')(cb);
 
@@ -56,6 +57,7 @@ gulp.task('dev', cb => {
   gulp.watch(src.templates, ['js:app']);
   gulp.watch(src.html,      ['html']);
   gulp.watch(src.images,    ['images']);
+  gulp.watch(src.json,      ['json']);
   gulp.watch(src.less,      ['styles'])
       .on('change', event => {
         if (event.type === 'deleted') {
@@ -159,6 +161,14 @@ gulp.task('sprites',
     ,gulp.dest(paths.dev.$)
   ]));
 
+gulp.task('json',
+  () => pipe([
+    gulp.src(paths.src.json)
+    ,p('json')
+    ,gulp.dest(paths.dev.$)
+    ,reload({stream: true})
+  ]));
+
 gulp.task('html',
   () => pipe([
     gulp.src(paths.src.html)
@@ -194,6 +204,7 @@ gulp.task('rev',
   _.each({
     css:    {fn: minifyCss},
     js:     {fn: uglify, src: ({dev}) => [dev.app].concat([dev.vendor])},
+    json:   {fn: jsonMinify},
     html:   {fn: () => minifyHtml({quotes: true})},
     images: {fn: imagemin, src: ({dev}) => [dev.sprites]}
   }, ({dest, fn, src}, part) => {
@@ -226,6 +237,7 @@ const paths = {
     less: ['src/**/*.less'],
     html: ['./src/index.html'],
     images: ['./src/**/*.{svg,gif,png,jpg}'],
+    json: ['./src/**/*.json'],
     scripts: ['src/**/*.js'],
     templates: ['src/modules/**/template.html'],
     vendor: ['!./node_modules/*/node_modules/**']
@@ -238,6 +250,7 @@ const paths = {
     css: './.dev/app.css',
     html: './.dev/index.html',
     images: './.dev/**/*.{svg,gif,png,jpg}',
+    json: './.dev/**/*.json',
     sprites: './.dev/sprites.png',
     vendor: './.dev/vendor.js'
   },
@@ -249,6 +262,7 @@ const paths = {
     $: './.dist',
     app: './.dist/app.js',
     css: './.dist/app.css',
-    html: './.dist/index.html'
+    html: './.dist/index.html',
+    manifest: './.dist/manifest.json'
   }
 };
