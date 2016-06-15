@@ -37,12 +37,13 @@
           ontouchend="return this.firstElementChild.touchEnd(event)">
           <recent id="recent"
                onmousewheel="return this.cycleBarCount(event.deltaY < 0)"
-               onclick="this.classList.toggle('vertical')"
                onmousedown="return this.mouseDown(event)"
                onmouseup="return this.mouseUp(event)"
-               onmousemove="return this.mouseMove(event)"
-               oncontextmenu="return this.cycleBarCount()">
-            <nodes id="nodes" class="vertical">
+               onmousemove="return this.mouseMove(event)">
+            <nodes id="nodes"
+                   class="left"
+                   onclick="return this.cycleBarEffect()"
+                   oncontextmenu="return this.cycleBarEffect(true)">
             </nodes>
           </recent>
 

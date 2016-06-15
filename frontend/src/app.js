@@ -113,13 +113,16 @@ getUserMedia({audio: true})
 const saveBlockDuration = 5 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
-const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/*, 16384, 32768*/]);
+const barCounts = new Cycle([1, 2, 4, 8/*, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192*//*, 16384, 32768*/]);
 const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64]);
 const historySizes = new Cycle([10, 25, 50, 100, 175, 300, 500, 800, 1200]);
 
+const barPosition = ['left', 'top', 'right', 'bottom'];
+
 const barCountCycle = barCounts.create(),
       accumulationPeriodsCycle = accumulationPeriods.create(),
-      historySizesCycle = historySizes.create();
+      historySizesCycle = historySizes.create(),
+      barPositionCycle = new Cycle(barPosition).create();
 
 let data, accumulations = 0, accumulationStart = -1000;
 
@@ -434,6 +437,23 @@ function attachAnalyser({stream, data, lastSaveTime}) {
     return false;
   };
 
+  nodes.cycleBarEffect = backwards => {
+    nodes.classList.remove(barPositionCycle.value);
+
+    if (backwards) {
+      barPositionCycle.goBackward();
+      if (barPositionCycle.value === 'bottom') recent.cycleBarCount(true);
+    }
+    else {
+      barPositionCycle.goForward();
+      if (barPositionCycle.value === 'left') recent.cycleBarCount();
+    }
+
+    nodes.classList.add(barPositionCycle.value);
+
+    return false;
+  };
+
   let hasMenu = false;
   let start = {x: 0, y: 0},
       last = {x: 0, y: 0};
@@ -484,6 +504,8 @@ function attachAnalyser({stream, data, lastSaveTime}) {
       timer = undefined;
     }, 125);
 
+    nodes.cycleBarEffect();
+
     return false;
   };
 
@@ -494,7 +516,7 @@ function attachAnalyser({stream, data, lastSaveTime}) {
     if (timer) {
       clearTimeout(timer);
 
-      nodes.classList.toggle('vertical');
+      // nodes.classList.toggle('vertical');
 
       timer = undefined;
     }
@@ -621,7 +643,7 @@ function draw({analyser}) {
       accumulationStart = now;
     }
 
-    const vertical = nodes.className === 'vertical';
+    const vertical = nodes.className === '' || nodes.className === 'left' || nodes.className === 'right';
 
     let sum = 0;
 

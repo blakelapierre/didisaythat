@@ -16,10 +16,12 @@ class CycleInstance {
 
   goBackward() {
     this.valueIndex = (this.valueIndex === 0 ? this.cycle.values.length : this.valueIndex) - 1;
+    return this.value;
   }
 
   goForward() {
     this.valueIndex = (this.valueIndex + 1) % this.cycle.values.length;
+    return this.value;
   }
 
   get value() {

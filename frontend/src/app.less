@@ -200,13 +200,26 @@ body {
             align-items: stretch;
             justify-content: center;
 
-            &.vertical {
+            &.top {
+              flex-direction: row;
+            }
+
+            &.left {
               flex-direction: column-reverse;
             }
 
-            div {
-              bottom: 0;
+            &.right {
+              direction: rtl;
 
+              flex-direction: column-reverse;
+            }
+
+            &.bottom {
+              align-items: flex-end;
+              flex-direction: row;
+            }
+
+            div {
               flex: 1 0 auto;
 
               background-color: #fff;
