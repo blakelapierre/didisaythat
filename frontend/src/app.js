@@ -74,11 +74,11 @@ const noPermission = document.getElementById('no-permission'),
       authorized = document.getElementById('authorized'),
       hint = noPermission.children[1];
 
-const now = document.getElementById('now'),
+const recent = document.getElementById('recent'),
       nodes = document.getElementById('nodes'),
       history = document.getElementById('history'),
       time = document.getElementById('time'),
-      nowMenu = document.getElementById('now-menu');
+      recentMenu = document.getElementById('recent-menu');
 
 const hoursEl = document.getElementsByTagName('hours')[0],
       minutesEl = document.getElementsByTagName('minutes')[0],
@@ -425,7 +425,7 @@ function attachAnalyser({stream, data, lastSaveTime}) {
   source.connect(gain);
   gain.connect(analyser);
 
-  now.cycleBarCount = backwards => {
+  recent.cycleBarCount = backwards => {
     if (backwards) barCountCycle.goBackward();
     else barCountCycle.goForward();
 
@@ -440,21 +440,21 @@ function attachAnalyser({stream, data, lastSaveTime}) {
 
   let timer;
 
-  now.mouseDown = event => {
+  recent.mouseDown = event => {
     hasMenu = true;
 
     start.x = last.x = event.clientX;
     start.y = last.y = event.clientY;
 
     timer = setTimeout(() => {
-      if (hasMenu) nowMenu.classList.add('visible');
+      if (hasMenu) recentMenu.classList.add('visible');
       timer = undefined;
     }, 125);
   };
 
-  now.mouseUp = event => {
+  recent.mouseUp = event => {
     hasMenu = false;
-    nowMenu.classList.remove('visible');
+    recentMenu.classList.remove('visible');
 
     if (event.button === 0 && timer) {
       clearTimeout(timer);
@@ -465,7 +465,7 @@ function attachAnalyser({stream, data, lastSaveTime}) {
     }
   };
 
-  now.mouseMove = event => {
+  recent.mouseMove = event => {
     const total = {x: event.clientX - start.x, y: event.clientY - start.y};
 
     if (hasMenu) {
@@ -474,22 +474,22 @@ function attachAnalyser({stream, data, lastSaveTime}) {
     }
   };
 
-  now.touchStart = event => {
+  recent.touchStart = event => {
     hasMenu = true;
     start.x = last.x = event.clientX;
     start.y = last.y = event.clientY;
 
     timer = setTimeout(() => {
-      if (hasMenu) nowMenu.classList.add('visible');
+      if (hasMenu) recentMenu.classList.add('visible');
       timer = undefined;
     }, 125);
 
     return false;
   };
 
-  now.touchEnd = event => {
+  recent.touchEnd = event => {
     hasMenu = false;
-    nowMenu.classList.remove('visible');
+    recentMenu.classList.remove('visible');
 
     if (timer) {
       clearTimeout(timer);

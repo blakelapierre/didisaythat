@@ -35,7 +35,7 @@
         <upper
           ontouchstart="return this.firstElementChild.touchStart(event)"
           ontouchend="return this.firstElementChild.touchEnd(event)">
-          <now id="now"
+          <recent id="recent"
                onmousewheel="return this.cycleBarCount(event.deltaY < 0)"
                onclick="this.classList.toggle('vertical')"
                onmousedown="return this.mouseDown(event)"
@@ -44,9 +44,9 @@
                oncontextmenu="return this.cycleBarCount()">
             <nodes id="nodes" class="vertical">
             </nodes>
-          </now>
+          </recent>
 
-          <menu id="now-menu"
+          <menu id="recent-menu"
                 onmouseup="return this.previousElementSibling.mouseUp(event)">
             <more-bars onmouseup="this.parentNode.previousElementSibling.cycleBarCount()">
             More Bars
