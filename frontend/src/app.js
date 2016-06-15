@@ -442,11 +442,11 @@ function attachAnalyser({stream, data, lastSaveTime}) {
 
     if (backwards) {
       barPositionCycle.goBackward();
-      if (barPositionCycle.value === 'bottom') recent.cycleBarCount(true);
+      // if (barPositionCycle.value === 'bottom') recent.cycleBarCount(true);
     }
     else {
       barPositionCycle.goForward();
-      if (barPositionCycle.value === 'left') recent.cycleBarCount();
+      // if (barPositionCycle.value === 'left') recent.cycleBarCount();
     }
 
     nodes.classList.add(barPositionCycle.value);
