@@ -7,8 +7,7 @@ const errorDetailsElement = document.getElementsByTagName('error-details')[0],
 window.addEventListener('error', event => showError(event.error));
 
 function showError(error) {
-  console.log(error.stack);
-  console.log(encodeEntities(error.stack));
+  console.log(error);
 
   errorDetailsElement.getElementsByTagName('message')[0].innerHTML = `${error.message}`;
   errorDetailsElement.getElementsByTagName('stack')[0].innerHTML = `${encodeEntities(error.stack)}`;
@@ -164,8 +163,16 @@ class Recording {
       const now = new Date().getTime();
 
       if (now - this.start > duration) {
-        this.recorder.stop(); // will this only be called once?
+        if (this.recorder.state === 'recording') {
+          this.recorder.stop(); // will this only be called once?
+          this.onDurationMet();
+        }
       }
+    });
+
+    recorder.addEventListener('stop', event => {
+      // all data collected
+
     });
 
 
@@ -185,8 +192,12 @@ let playback;
 let shouldFinalize = false;
 let callWhenFinalized;
 function attachRecorder(stream) {
-  const recording = new Recording(new MediaRecorder(stream), saveBlockDuration);
+  const recording = new Recording(new MediaRecorder(stream), saveBlockDuration),
+        startTime = recording.start;
 
+  recording.onDurationMet = () => {
+
+  };
 
 
   // let currentRecorder = new MediaRecorder(stream),
@@ -233,7 +244,7 @@ function attachRecorder(stream) {
     // audio.play();
   };
 
-  return {currentRecorder, nextRecorder, stream, data, lastSaveTime};
+  return {stream, data};
 
   function makeDataHandler(recorder) {
     let data = new Blob();
@@ -759,9 +770,7 @@ function updateLoop() {
 }
 
 function mediaError(error) {
-  console.log(error); // should report these?
-
-  if (error.name === 'PermissionDeniedError') return; //ignore for now
+  // if (error.name === 'PermissionDeniedError') return; //ignore for now
 
   showError(error);
 
