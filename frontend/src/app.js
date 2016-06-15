@@ -1,5 +1,38 @@
 import Cycle from './cycle';
 
+const errorDetailsElement = document.getElementsByTagName('error-details')[0],
+      errorElement = document.getElementsByTagName('error-display')[0];
+
+// errorElement.addEventListener('click', event => errorElement.style.display = 'none');
+window.addEventListener('error', event => showError(event.error));
+
+function showError(error) {
+  console.log(error.stack);
+  console.log(encodeEntities(error.stack));
+
+  errorDetailsElement.getElementsByTagName('message')[0].innerHTML = `${error.message}`;
+  errorDetailsElement.getElementsByTagName('stack')[0].innerHTML = `${encodeEntities(error.stack)}`;
+  errorElement.style.display = 'flex';
+}
+
+// from Angular
+// https://github.com/angular/angular.js/blob/v1.3.14/src/ngSanitize/sanitize.js#L435
+const SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
+      NON_ALPHANUMERIC_REGEXP = /([^\#-~| |!])/g;
+function encodeEntities(value) {
+  return value.
+    replace(/&/g, '&amp;').
+    replace(SURROGATE_PAIR_REGEXP, function(value) {
+      var hi = value.charCodeAt(0);
+      var low = value.charCodeAt(1);
+      return '&#' + (((hi - 0xD800) * 0x400) + (low - 0xDC00) + 0x10000) + ';';
+    }).
+    replace(NON_ALPHANUMERIC_REGEXP, function(value) {
+      return '&#' + value.charCodeAt(0) + ';';
+    }).
+    replace(/</g, '&lt;').
+    replace(/>/g, '&gt;');
+}
 
 try {
   navigator.getUserMedia = (navigator.getUserMedia ||
@@ -77,8 +110,8 @@ getUserMedia({audio: true})
   .then(draw)
   .catch(mediaError);
 
-// const saveBlockTime = 60 * 1000; // one minute
-const saveBlockTime = 5 * 1000; // five seconds
+// const saveBlockDuration = 60 * 1000; // one minute
+const saveBlockDuration = 5 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
 const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/*, 16384, 32768*/]);
@@ -115,24 +148,60 @@ function attachRecorder(stream) {
   return {recorder, stream};
 }
 
+class Recording {
+  constructor(recorder, duration) {
+    this.recorder = recorder;
+    this.duration = duration;
+    this.start = new Date().getTime();
+
+    this.data = [];
+
+    recorder.addEventListener('dataavailable', event => {
+      if (event.data.size > 0) {
+        this.data.push(event.data); // hold on to this until needed, it's too expensive to push it into a Blob, just yet
+      }
+
+      const now = new Date().getTime();
+
+      if (now - this.start > duration) {
+        this.recorder.stop(); // will this only be called once?
+      }
+    });
+
+
+
+    recorder.start(duration);
+  }
+
+  getBlob() {
+    this.blob = this.blob ? new Blob([this.blob].concat(this.data)) : new Blob(this.data);
+
+    this.data.splice(0);
+  }
+}
+
 let dataCount = 0;
 let playback;
 let shouldFinalize = false;
 let callWhenFinalized;
 function attachRecorder(stream) {
-  let currentRecorder = new MediaRecorder(stream),
-      nextRecorder = new MediaRecorder(stream);
+  const recording = new Recording(new MediaRecorder(stream), saveBlockDuration);
 
-  const startTime = new Date().getTime(),
-        savedBlobs = [];
 
-  let data = [];
-  let dataSize = 0,
-      totalDataSize = 0,
-      lastSaveTime = startTime;
 
-  currentRecorder.ondataavailable = makeDataHandler(currentRecorder);
-  currentRecorder.start();
+  // let currentRecorder = new MediaRecorder(stream),
+  //     nextRecorder = new MediaRecorder(stream);
+
+  // const startTime = new Date().getTime(),
+  //       savedBlobs = [];
+
+  // let data = [];
+  // let dataSize = 0,
+  //     totalDataSize = 0,
+  //     lastSaveTime = startTime;
+
+  // currentRecorder.ondataavailable = makeDataHandler(currentRecorder);
+  // currentRecorder.start();
 
   updates.push(updateTime);
 
@@ -166,65 +235,87 @@ function attachRecorder(stream) {
 
   return {currentRecorder, nextRecorder, stream, data, lastSaveTime};
 
-  function makeDataHandler(r) {
-    const recorder = r;
-    let data = [],
-        finalize = false;
-
-    // console.log(recorder, r);
-
-    const reader = new FileReader();
+  function makeDataHandler(recorder) {
+    let data = new Blob();
 
     return event => {
       const now = new Date().getTime();
+      if (event.data.size > 0) {
+        const newData = new Blob([data, event.data]);
 
-      if (event.data.size > 0) data.push(event.data);
+        // data.close();
 
-      // console.log(r.state);
+        data = newData;
 
-      if (finalize) {
-        savedBlobs.push([now, new Blob(data)]);
-        lastSaveTime = now;
-
-        data.splice(0);
-        if (dataCount++ < 3) console.log(savedBlobs);
-
-        finalize = false;
-
-        const blob = savedBlobs[savedBlobs.length - 1][1];
-        reader.readAsBinaryString(blob.slice(0, 2048));
-
-        reader.onload = event => console.log(blob, event, reader.result);
-
-        // console.log('finalized');
+        if (newData.size < 1000) console.log(data);
       }
-      else if (now - lastSaveTime > saveBlockTime) {
-        console.log('should finalize');
 
-        finalize = true;
+      if (now - lastSaveTime > saveBlockDuration) {
 
-        // if (r.state !== 'inactive') {
-        //   console.log('switching recorders');
-        //   r.stop(); // should be a different condition
-        // }
-
-        // nextRecorder.ondataavailable = makeDataHandler(nextRecorder);
-        // nextRecorder.start();
-
-        // const tmp = currentRecorder;
-
-        // currentRecorder = nextRecorder;
-        // nextRecorder = tmp;
       }
+
     };
   }
+
+  // function makeDataHandler(r) {
+  //   const recorder = r;
+  //   let data = [],
+  //       finalize = false;
+
+  //   // console.log(recorder, r);
+
+  //   const reader = new FileReader();
+
+  //   return event => {
+  //     const now = new Date().getTime();
+
+  //     if (event.data.size > 0) data.push(event.data);
+
+  //     // console.log(r.state);
+
+  //     if (finalize) {
+  //       savedBlobs.push([now, new Blob(data)]);
+  //       lastSaveTime = now;
+
+  //       data.splice(0);
+  //       if (dataCount++ < 3) console.log(savedBlobs);
+
+  //       finalize = false;
+
+  //       const blob = savedBlobs[savedBlobs.length - 1][1];
+  //       reader.readAsBinaryString(blob.slice(0, 2048));
+
+  //       reader.onload = event => console.log(blob, event, reader.result);
+
+  //       // console.log('finalized');
+  //     }
+  //     else if (now - lastSaveTime > saveBlockDuration) {
+  //       console.log('should finalize');
+
+  //       finalize = true;
+
+  //       // if (r.state !== 'inactive') {
+  //       //   console.log('switching recorders');
+  //       //   r.stop(); // should be a different condition
+  //       // }
+
+  //       // nextRecorder.ondataavailable = makeDataHandler(nextRecorder);
+  //       // nextRecorder.start();
+
+  //       // const tmp = currentRecorder;
+
+  //       // currentRecorder = nextRecorder;
+  //       // nextRecorder = tmp;
+  //     }
+  //   };
+  // }
 
   // function addData(event) {
   //   const now = new Date().getTime();
 
   //   data.push(event.data);
 
-  //   if (now - lastSaveTime > saveBlockTime) {
+  //   if (now - lastSaveTime > saveBlockDuration) {
   //     currentRecorder.stop();
 
   //     nextRecorder.ondataavailable = addData;
@@ -237,7 +328,7 @@ function attachRecorder(stream) {
 
   //   data.push(event.data);
 
-  //   if (now - lastSaveTime > saveBlockTime) shouldFinalize = true;
+  //   if (now - lastSaveTime > saveBlockDuration) shouldFinalize = true;
 
   //   if (shouldFinalize) {
   //     const blob = new Blob(data/*, {type: 'audio/webm;codecs=opus'}*/);
@@ -275,7 +366,7 @@ function attachRecorder(stream) {
 
   //   const now = new Date().getTime();
 
-  //   if (now - lastSaveTime > saveBlockTime) {
+  //   if (now - lastSaveTime > saveBlockDuration) {
   //     const blob = new Blob(data);
 
   //     savedBlobs.push([lastSaveTime, blob]) ;
@@ -672,7 +763,9 @@ function mediaError(error) {
 
   if (error.name === 'PermissionDeniedError') return; //ignore for now
 
-  if (confirm(`An error occurred! (${error.message} ${error.stack}) Reload?`)) {
-    window.location.reload();
-  }
+  showError(error);
+
+  // if (confirm(`An error occurred! (${error.message} ${error.stack}) Reload?`)) {
+  //   window.location.reload();
+  // }
 }
