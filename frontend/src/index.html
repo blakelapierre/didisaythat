@@ -37,6 +37,7 @@
           ontouchend="return this.firstElementChild.touchEnd(event)">
           <recent id="recent"
                onmousewheel="return this.cycleBarCount(event.deltaY < 0)"
+               onwheel="return this.cycleBarCount(event.deltaY < 0) /* firefox*/"
                onmousedown="return this.mouseDown(event)"
                onmouseup="return this.mouseUp(event)"
                onmousemove="return this.mouseMove(event)">
@@ -79,6 +80,13 @@
 
         </storage-panel>
 
+        <time id="time" onclick="storage()">
+          <span><hours></hours> <sup>°</sup></span>
+          <span><minutes></minutes> <sup>'</sup></span>
+          <span><seconds></seconds> <sup>''</sup></span>
+          <span><milliseconds></milliseconds> <sub>ms</sub></span>
+        </time>
+
         <overlay>
           <fullscreen onclick="requestFullScreen()"
                       title="Go FullScreen">
@@ -92,12 +100,7 @@
             </a2>
           </fullscreen>
         </overlay>
-        <time id="time" onclick="storage()">
-          <span><hours></hours> <sup>°</sup></span>
-          <span><minutes></minutes> <sup>'</sup></span>
-          <span><seconds></seconds> <sup>''</sup></span>
-          <span><milliseconds></milliseconds> <sub>ms</sub></span>
-        </time>
+
 
         <android onclick="this.style.display = 'none'">
           <span>You appear to be using an Android device. You very likely need to ENABLE THE UNIFIED MEDIA PIPELINE ON ANDROID to be able to listen to your recordings from within this application. Without enabling this feature, the abilities this software provides you will be severely limited. Please complain to Google.</span>

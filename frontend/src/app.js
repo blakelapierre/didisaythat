@@ -150,6 +150,72 @@ function attachRecorder(stream) {
   return {recorder, stream};
 }
 
+class Recorder {
+  constructor (stream, duration) {
+    this.recordings = [];
+    // this.recording = new Recording(new MediaRecorder(stream), duration);
+    this.recording = this._startRecording(stream, duration);
+
+    // console.log('recording started');
+
+    // this.recording.recordingEnding = () => {
+    //   this.otherRecording = new Recording(new MediaRecorder(stream), duration);
+
+    //   this.otherRecording =
+    //   console.log('recording started');
+    // };
+
+    // this.recording.onDurationMet = () => {
+    //   console.log('duration met');
+
+    //   this.recordings.push([this.recording.start, this.recording.blob]);
+
+    //   this.recording = this.otherRecording;
+    // };
+  }
+
+  _startRecording (stream, duration) {
+    console.log('recording started');
+
+    const recording = new Recording(new MediaRecorder(stream), duration);
+
+    recording.recordingEnding = () => {
+      this.otherRecording = this._startRecording(stream, duration);
+    };
+
+    recording.onDurationMet = () => {
+      console.log('duration met');
+
+      this.recordings.push([this.recording.start, this.recording.blob]);
+
+      const record = document.createElement('record');
+
+      record.innerHTML = `${this.recording.start}, ${this.recording.blob.size} record`;
+
+      const index = this.recordings.length - 1;
+      record.addEventListener('click', event => {
+        play(this.recordings[index][1]);
+        // const blob = this.recordings[index][1];
+
+        // const audio = document.createElement('audio');
+
+        // audio.src = window.URL.createObjectURL(blob);
+        // audio.play();
+      });
+
+      storagePanel.appendChild(record);
+
+
+      this.recording = this.otherRecording;
+
+      console.log(this.recordings);
+    };
+
+    return recording;
+  }
+}
+
+// Manages the lifetime of a recording?
 class Recording {
   constructor(recorder, duration) {
     this.recorder = recorder;
@@ -158,7 +224,10 @@ class Recording {
 
     this.data = [];
 
+    console.log(recorder);
+
     recorder.addEventListener('dataavailable', event => {
+      console.log(event.data);
       if (event.data.size > 0) {
         this.data.push(event.data); // hold on to this until needed, it's too expensive to push it into a Blob, just yet
       }
@@ -167,26 +236,48 @@ class Recording {
 
       if (now - this.start > duration) {
         if (this.recorder.state === 'recording') {
-          this.recorder.stop(); // will this only be called once?
-          this.onDurationMet();
+          this.recordingEnding();
+          this.recorder.stop();
         }
       }
+
+      console.log('waiting', this.waitingForData);
+      if (this.waitingForData) this.waitingForData();
     });
 
     recorder.addEventListener('stop', event => {
-      // all data collected
-
+      // should be saved now
+      console.log('recorder stopped');
+      this.onDurationMet();
     });
 
-
-
-    recorder.start(duration);
+    // recorder.start(duration);
+    recorder.start(2000);
   }
 
-  getBlob() {
-    this.blob = this.blob ? new Blob([this.blob].concat(this.data)) : new Blob(this.data);
+  get blob() {
+    if (this.data.length === 0) return this._blob;
+
+    this._blob = this._blob ? new Blob([this._blob].concat(this.data)) : new Blob(this.data);
 
     this.data.splice(0);
+
+    return this._blob; // doesn't seem right
+  }
+
+  getLatestBlob() {
+    if (!this.blobPromise) {
+      this.blobPromise = new Promise((resolve, reject) => {
+        this.waitingForData = () => {
+          this.blobPromise = undefined;
+          this.waitingForData = undefined;
+          resolve(this.blob);
+        };
+        this.recorder.requestData();
+      });
+    }
+
+    return this.blobPromise;
   }
 }
 
@@ -195,12 +286,23 @@ let playback;
 let shouldFinalize = false;
 let callWhenFinalized;
 function attachRecorder(stream) {
-  const recording = new Recording(new MediaRecorder(stream), saveBlockDuration),
-        startTime = recording.start;
+  const recorder = new Recorder(stream, saveBlockDuration),
+        startTime = recorder.recording.start;
+  // const recording = new Recording(new MediaRecorder(stream), saveBlockDuration),
+  //       startTime = recording.start;
 
-  recording.onDurationMet = () => {
+  // recording.onDurationMet = () => {
+  //   const audio = document.createElement('audio');
 
-  };
+  //   const url = window.URL.createObjectURL(recording.blob);
+
+  //   console.log(url);
+
+  //   audio.src = url;
+
+  //   console.log('play');
+  //   audio.play();
+  // };
 
 
   // let currentRecorder = new MediaRecorder(stream),
@@ -219,9 +321,9 @@ function attachRecorder(stream) {
 
   updates.push(updateTime);
 
-  playback = (time = lastSaveTime) => {
+  playback = (time = startTime) => {
 
-    let delta = time - lastSaveTime;
+    let delta = time - startTime;
 
     if (delta < 0) { // is this the right boundary?
 
@@ -236,7 +338,9 @@ function attachRecorder(stream) {
 
     // callWhenFinalized = blob => play(blob, delta);
 
-    console.log(lastSaveTime, delta, data);
+    console.log(startTime, delta, data);
+
+    // recording.getLatestBlob().then(blob => console.log('blob', blob));
 
     // const blob = new Blob([savedBlobs[0], data]);
     // const url = window.URL.createObjectURL(blob);
@@ -247,7 +351,7 @@ function attachRecorder(stream) {
     // audio.play();
   };
 
-  return {stream, data};
+  return {recorder, stream, data};
 
   function makeDataHandler(recorder) {
     let data = new Blob();
