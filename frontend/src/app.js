@@ -113,18 +113,18 @@ getUserMedia({audio: true})
 const saveBlockDuration = 5 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
-const barCounts = new Cycle([1, 2, 4, 8/*, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192*//*, 16384, 32768*/]);
+const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
 const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64]);
-const historySizes = new Cycle([10, 25, 50, 100, 175, 300, 500, 800, 1200]);
+const historyLengths = new Cycle([60, 90, 120, 150, 180, 240, 300, 500, 1000, 1500]);
 
 const barPosition = ['left', 'top', 'right', 'bottom'];
 
 const barCountCycle = barCounts.create(),
       accumulationPeriodsCycle = accumulationPeriods.create(),
-      historySizesCycle = historySizes.create(),
+      historyLengthCycle = historyLengths.create(),
       barPositionCycle = new Cycle(barPosition).create();
 
-let data, accumulations = 0, accumulationStart = -1000;
+let data, accumulations = 0, accumulationStart;
 
 const accumulator = [];
 
@@ -524,6 +524,7 @@ function attachAnalyser({stream, data, lastSaveTime}) {
 
   analyser.smoothingTimeConstant = smoothingTimeConstant;
   setAnalyserSize(analyser, barCountCycle.value, nodes);
+  setHistoryLength(historyLengthCycle.value);
 
   const gain = audioContext.createGain();
 
@@ -642,7 +643,8 @@ function attachAnalyser({stream, data, lastSaveTime}) {
         if (indicators.end) indicators.end.classList.remove('end');
 
         indicators.start = indicators.mover = slice;
-        indicators.end = history.firstChild;
+        // indicators.end = history.firstChild;
+        indicators.end = history.children[Math.max(0, history.children.length - position)];
 
         indicators.start.classList.add('start');
         indicators.end.classList.add('end');
@@ -666,8 +668,6 @@ function setAnalyserSize(analyser, size, nodes) {
 
   data = new Uint8Array(bins / 2);
 
-  // setHistoryLength(historySizesCycle.value);
-
   // need to distribute current accumulations
 
   if (count > accumulator.length) {
@@ -689,16 +689,38 @@ function setAnalyserSize(analyser, size, nodes) {
 
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
+
+  for (let i = 0; i < history.children.length; i++) {
+    const slice = history.children[i];
+    for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
+    for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
+  }
 }
 
 function setHistoryLength(length) {
   // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
+  // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
+  for (let i = history.children.length; i < length; i++) history.insertBefore(document.createElement('slice'), history.firstChild);
   for (let i = history.children.length - 1; i >= length; i--) history.children[i].remove();
+
+  for (let i = 0; i < history.children.length; i++) {
+    const slice = history.children[i];
+    for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
+    for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
+  }
+
+  // if (position > history.children.length) {
+  //   position = history.children.length - 1;
+  //   console.log('position', position);
+  // }
 }
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
+let position = 0;
 
 function draw({analyser}) {
+  accumulationStart = new Date().getTime();
+
   noPermission.classList.add('granted');
   authorized.classList.add('authorized');
 
@@ -711,11 +733,17 @@ function draw({analyser}) {
 
     analyser.getByteFrequencyData(data);
 
+    const nextSliceIndex = position >= history.children.length ? 0 : history.children.length -1 - position;
+
     // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
-      const slice = history.children.length >= historySizesCycle.value ? history.lastElementChild : document.createElement('slice');
-      for (let i = slice.children.length; i < nodes.children.length; i++) slice.appendChild(document.createElement('node'));
-      for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[i].remove();
+      if (nextSliceIndex === 0) history.insertBefore(history.children[history.children.length - 1], history.firstChild);
+
+      const slice = history.children[nextSliceIndex];
+
+      if (position < history.children.length) position++;
+
+      // const slice = history.lastElementChild;
 
       slice.approximateTime = now;
 
@@ -741,13 +769,12 @@ function draw({analyser}) {
         }
       }
 
-      history.insertBefore(slice, history.firstChild);
 
       accumulations = 1;
       accumulationStart = now;
     }
 
-    const vertical = nodes.className === '' || nodes.className === 'left' || nodes.className === 'right';
+    const vertical = nodes.className === '' || nodes.classList.contains('left') || nodes.classList.contains('right');
 
     let sum = 0;
 
@@ -827,7 +854,8 @@ function draw({analyser}) {
       }
     }
 
-    const slice = history.children[0];
+    // const slice = history.children[0];
+    const slice = history.children[nextSliceIndex];
     for (let i = 0; i < slice.children.length; i++) {
       const node = slice.children[i];
 
@@ -854,10 +882,10 @@ window.requestFullScreen = () => {
 };
 
 window.cycleHistorySize = backwards => {
-  if (backwards) historySizesCycle.goBackward();
-  else historySizesCycle.goForward();
+  if (backwards) historyLengthCycle.goBackward();
+  else historyLengthCycle.goForward();
 
-  setHistoryLength(historySizesCycle.value);
+  setHistoryLength(historyLengthCycle.value);
 };
 
 window.cycleAccumulationPeriod = () => {

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title></title>
+
+    <style type="text/css">
+    fullscreen {
+      position: absolute;
+
+      bottom: 0;
+      right: 0;
+
+      font-size: 2em;
+      font-weight: bold;
+
+      width: 2em;
+      height: 2em;
+
+      transform: rotate(45deg);
+
+      cursor: pointer;
+
+      user-select: none;
+
+      font-family: monospace, sans-serif;;
+      font-weight: bolder;
+    }
+
+    up, down, left, right {
+      position: absolute;
+
+      left: 0;
+      right: 0;
+
+      height: 1em;
+      line-height: 1 em;
+
+      text-align: center;
+
+      transform-origin: 50% 100%;
+    }
+
+    a1 {
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    a1 down {
+      transform: rotate(180deg);
+    }
+
+    a2 {
+      position: absolute;
+
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      transform: rotate(-90deg);
+    }
+
+    a2 right {
+      transform: rotate(180deg);
+    }
+    </style>
+  </head>
+  <body>
+    <fullscreen>
+      <a1>
+        <up>↑</up>
+        <down>↑</down>
+      </a1>
+      <a2>
+        <left>↑</left>
+        <right>↑</right>
+      </a2>
+    </fullscreen>
+  </body>
+</html>
