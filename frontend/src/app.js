@@ -91,6 +91,22 @@ const audio = document.createElement('audio');
 
 document.body.insertBefore(audio, document.body.firstChild);
 
+const mainCanvas = document.createElement('canvas'),
+      mainContext = mainCanvas.getContext('2d'),
+      displayCanvas = document.createElement('canvas'),
+      displayContext = displayCanvas.getContext('2d'),
+      mainPixel = mainContext.createImageData(1, 1),
+      mainPixelData = mainPixel.data;
+
+mainContext.imageSmoothingEnabled = false;
+
+history.appendChild(displayCanvas);
+// history.appendChild(mainCanvas);
+
+displayCanvas.width = 1000;
+displayCanvas.height = 200;
+
+
 // getUserMedia({
 //   "audio": {
 //     "mandatory": {
@@ -132,7 +148,6 @@ const accumulator = [];
 function getUserMedia(options) {
   return new Promise((resolve, reject) => navigator.getUserMedia(options, resolve, reject));
 }
-
 
 function play(blob, position = 0) {
   console.log(blob);
@@ -690,29 +705,32 @@ function setAnalyserSize(analyser, size, nodes) {
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
 
-  for (let i = 0; i < history.children.length; i++) {
-    const slice = history.children[i];
-    for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
-    for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
-  }
+  mainCanvas.height = count;
+  // for (let i = 0; i < history.children.length; i++) {
+  //   const slice = history.children[i];
+  //   for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
+  //   for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
+  // }
 }
 
 function setHistoryLength(length) {
   // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
   // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
-  for (let i = history.children.length; i < length; i++) history.insertBefore(document.createElement('slice'), history.firstChild);
-  for (let i = history.children.length - 1; i >= length; i--) history.children[i].remove();
+  // for (let i = history.children.length; i < length; i++) history.insertBefore(document.createElement('slice'), history.firstChild);
+  // for (let i = history.children.length - 1; i >= length; i--) history.children[i].remove();
 
-  for (let i = 0; i < history.children.length; i++) {
-    const slice = history.children[i];
-    for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
-    for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
-  }
+  // for (let i = 0; i < history.children.length; i++) {
+  //   const slice = history.children[i];
+  //   for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
+  //   for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
+  // }
 
   // if (position > history.children.length) {
   //   position = history.children.length - 1;
   //   console.log('position', position);
   // }
+
+  mainCanvas.width = length;
 }
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
@@ -733,41 +751,41 @@ function draw({analyser}) {
 
     analyser.getByteFrequencyData(data);
 
-    const nextSliceIndex = position >= history.children.length ? 0 : history.children.length -1 - position;
+    const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
 
     // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
-      if (nextSliceIndex === 0) history.insertBefore(history.children[history.children.length - 1], history.firstChild);
+      // if (nextSliceIndex === 0) history.insertBefore(history.children[history.children.length - 1], history.firstChild);
 
-      const slice = history.children[nextSliceIndex];
+      // const slice = history.children[nextSliceIndex];
 
-      if (position < history.children.length) position++;
+      if (position < mainCanvas.width) position++;
 
-      // const slice = history.lastElementChild;
+      // // const slice = history.lastElementChild;
 
-      slice.approximateTime = now;
+      // slice.approximateTime = now;
 
       for (let i = 0; i < accumulator.length; i++) accumulator[i] = 0;
 
-      slice.classList.remove('mover');
-      slice.classList.remove('start');
-      slice.classList.remove('end');
+      // slice.classList.remove('mover');
+      // slice.classList.remove('start');
+      // slice.classList.remove('end');
 
-      if (indicators.mover) {
-        indicators.mover.classList.remove('mover');
+      // if (indicators.mover) {
+      //   indicators.mover.classList.remove('mover');
 
-        if (indicators.mover === indicators.end) {
-          indicators.start.classList.remove('start');
-          indicators.end.classList.remove('end');
+      //   if (indicators.mover === indicators.end) {
+      //     indicators.start.classList.remove('start');
+      //     indicators.end.classList.remove('end');
 
-          indicators.start = indicators.end = indicators.mover = undefined;
-        }
-        else {
-          indicators.mover = indicators.mover.previousElementSibling;
+      //     indicators.start = indicators.end = indicators.mover = undefined;
+      //   }
+      //   else {
+      //     indicators.mover = indicators.mover.previousElementSibling;
 
-          if (indicators.mover) indicators.mover.classList.add('mover'); // can this be reorganized to remove the if?
-        }
-      }
+      //     if (indicators.mover) indicators.mover.classList.add('mover'); // can this be reorganized to remove the if?
+      //   }
+      // }
 
 
       accumulations = 1;
@@ -854,15 +872,33 @@ function draw({analyser}) {
       }
     }
 
-    // const slice = history.children[0];
-    const slice = history.children[nextSliceIndex];
-    for (let i = 0; i < slice.children.length; i++) {
-      const node = slice.children[i];
-
+    for (let i = 0; i < mainCanvas.height; i++) {
       const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
 
-      node.style.opacity = averagedValue / 255;
+      // mainPixelData[0] = averagedValue;
+      // mainPixelData[1] = averagedValue;
+      // mainPixelData[2] = averagedValue;
+      // mainPixelData[3] = 255;
+
+      // mainContext.putImageData(mainPixel, nextSliceIndex, i);
+
+      mainContext.fillStyle = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
+      // mainContext.fillStyle = `rgba(255, 255, 255, ${averagedValue / 255})`;
+      mainContext.fillRect(nextSliceIndex, i, 1, 1);
     }
+
+    // displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - 1, mainCanvas.height, Math.floor((nextSliceIndex / mainCanvas.width) * displayCanvas.width), 0
+    displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
+
+    // // const slice = history.children[0];
+    // const slice = history.children[nextSliceIndex];
+    // for (let i = 0; i < slice.children.length; i++) {
+    //   const node = slice.children[i];
+
+    //   const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
+
+    //   node.style.opacity = averagedValue / 255;
+    // }
 
     const total = sum / nodes.children.length;
 
