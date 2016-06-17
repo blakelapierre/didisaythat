@@ -98,13 +98,15 @@ const mainCanvas = document.createElement('canvas'),
       mainPixel = mainContext.createImageData(1, 1),
       mainPixelData = mainPixel.data;
 
-mainContext.imageSmoothingEnabled = false;
-
 history.appendChild(displayCanvas);
 // history.appendChild(mainCanvas);
 
+mainContext.imageSmoothingEnabled = false;
+displayContext.imageSmoothingEnabled = false;
+
 
 window.addEventListener('resize', event => setCanvasSize(displayCanvas));
+history.addEventListener('resize', event => setCanvasSize(displayCanvas));
 
 document.addEventListener('load', event => setCanvasSize(displayCanvas));
 
@@ -113,6 +115,9 @@ function setCanvasSize(canvas) {
 
   canvas.width = parent.clientWidth;
   canvas.height = parent.clientHeight;
+
+  mainContext.imageSmoothingEnabled = false;
+  displayContext.imageSmoothingEnabled = false;
 }
 
 
@@ -348,7 +353,7 @@ function attachRecorder(stream) {
           milliseconds = duration % 1000,
           totalSeconds = Math.floor(duration / 1000),
           seconds = totalSeconds % 60,
-          minutes = Math.floor(totalSeconds / 60),
+          minutes = Math.floor(totalSeconds / 60) % 60,
           totalMinutes = Math.floor(duration / (60 * 1000)),
           hours = Math.floor(totalMinutes / 60);
 
@@ -566,7 +571,7 @@ function setHistoryLength(length) {
 }
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
-let position = 0;
+let position = 0, offsets = {data: 0, view: 0};
 
 function draw({analyser}) {
   accumulationStart = new Date().getTime();
@@ -585,6 +590,8 @@ function draw({analyser}) {
 
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
       if (position < mainCanvas.width) position++;
+      if (position === mainCanvas.width) offsets.view++; // might want >= ?
+      offsets.data++;
 
       for (let i = 0; i < accumulator.length; i++) accumulator[i] = 0;
 
@@ -672,7 +679,8 @@ function draw({analyser}) {
       }
     }
 
-    const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
+    // const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
+    const nextSliceIndex = mainCanvas.width - ((position + offsets.view) % mainCanvas.width) - 1;
 
     for (let i = 0; i < mainCanvas.height; i++) {
       const averagedValue = accumulator[accumulator.length - 1 - i] / accumulations;
@@ -687,7 +695,15 @@ function draw({analyser}) {
 
     // displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
 
-    displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
+    const wrapped = offsets.view % mainCanvas.width;
+
+    displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height, nextSliceIndex / mainCanvas.width * displayCanvas.width, 0, displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width), displayCanvas.height);
+
+    console.log(wrapped, nextSliceIndex, offsets.view);
+
+    if (wrapped > 0) {
+      // displayContext.drawImage(mainCanvas, 0, 0, nextSliceIndex, mainCanvas.height, 0, 0, wrapped - 1 / mainCanvas.width, displayCanvas.height);
+    }
 
     const total = sum / nodes.children.length;
 
