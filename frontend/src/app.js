@@ -177,25 +177,7 @@ function attachRecorder(stream) {
 class Recorder {
   constructor (stream, duration) {
     this.recordings = [];
-    // this.recording = new Recording(new MediaRecorder(stream), duration);
     this.recording = this._startRecording(stream, duration);
-
-    // console.log('recording started');
-
-    // this.recording.recordingEnding = () => {
-    //   this.otherRecording = new Recording(new MediaRecorder(stream), duration);
-
-    //   this.otherRecording =
-    //   console.log('recording started');
-    // };
-
-    // this.recording.onDurationMet = () => {
-    //   console.log('duration met');
-
-    //   this.recordings.push([this.recording.start, this.recording.blob]);
-
-    //   this.recording = this.otherRecording;
-    // };
   }
 
   _startRecording (stream, duration) {
@@ -217,18 +199,10 @@ class Recorder {
       record.innerHTML = `${this.recording.start}, ${this.recording.blob.size} record`;
 
       const index = this.recordings.length - 1;
-      record.addEventListener('click', event => {
-        play(this.recordings[index][1]);
-        // const blob = this.recordings[index][1];
 
-        // const audio = document.createElement('audio');
-
-        // audio.src = window.URL.createObjectURL(blob);
-        // audio.play();
-      });
+      record.addEventListener('click', event => play(this.recordings[index][1]));
 
       storagePanel.appendChild(record);
-
 
       this.recording = this.otherRecording;
 
@@ -312,36 +286,6 @@ let callWhenFinalized;
 function attachRecorder(stream) {
   const recorder = new Recorder(stream, saveBlockDuration),
         startTime = recorder.recording.start;
-  // const recording = new Recording(new MediaRecorder(stream), saveBlockDuration),
-  //       startTime = recording.start;
-
-  // recording.onDurationMet = () => {
-  //   const audio = document.createElement('audio');
-
-  //   const url = window.URL.createObjectURL(recording.blob);
-
-  //   console.log(url);
-
-  //   audio.src = url;
-
-  //   console.log('play');
-  //   audio.play();
-  // };
-
-
-  // let currentRecorder = new MediaRecorder(stream),
-  //     nextRecorder = new MediaRecorder(stream);
-
-  // const startTime = new Date().getTime(),
-  //       savedBlobs = [];
-
-  // let data = [];
-  // let dataSize = 0,
-  //     totalDataSize = 0,
-  //     lastSaveTime = startTime;
-
-  // currentRecorder.ondataavailable = makeDataHandler(currentRecorder);
-  // currentRecorder.start();
 
   updates.push(updateTime);
 
@@ -399,137 +343,16 @@ function attachRecorder(stream) {
     };
   }
 
-  // function makeDataHandler(r) {
-  //   const recorder = r;
-  //   let data = [],
-  //       finalize = false;
-
-  //   // console.log(recorder, r);
-
-  //   const reader = new FileReader();
-
-  //   return event => {
-  //     const now = new Date().getTime();
-
-  //     if (event.data.size > 0) data.push(event.data);
-
-  //     // console.log(r.state);
-
-  //     if (finalize) {
-  //       savedBlobs.push([now, new Blob(data)]);
-  //       lastSaveTime = now;
-
-  //       data.splice(0);
-  //       if (dataCount++ < 3) console.log(savedBlobs);
-
-  //       finalize = false;
-
-  //       const blob = savedBlobs[savedBlobs.length - 1][1];
-  //       reader.readAsBinaryString(blob.slice(0, 2048));
-
-  //       reader.onload = event => console.log(blob, event, reader.result);
-
-  //       // console.log('finalized');
-  //     }
-  //     else if (now - lastSaveTime > saveBlockDuration) {
-  //       console.log('should finalize');
-
-  //       finalize = true;
-
-  //       // if (r.state !== 'inactive') {
-  //       //   console.log('switching recorders');
-  //       //   r.stop(); // should be a different condition
-  //       // }
-
-  //       // nextRecorder.ondataavailable = makeDataHandler(nextRecorder);
-  //       // nextRecorder.start();
-
-  //       // const tmp = currentRecorder;
-
-  //       // currentRecorder = nextRecorder;
-  //       // nextRecorder = tmp;
-  //     }
-  //   };
-  // }
-
-  // function addData(event) {
-  //   const now = new Date().getTime();
-
-  //   data.push(event.data);
-
-  //   if (now - lastSaveTime > saveBlockDuration) {
-  //     currentRecorder.stop();
-
-  //     nextRecorder.ondataavailable = addData;
-  //     nextRecorder.start();
-  //   }
-  // }
-
-  // function addData(event) {
-  //   const now = new Date().getTime();
-
-  //   data.push(event.data);
-
-  //   if (now - lastSaveTime > saveBlockDuration) shouldFinalize = true;
-
-  //   if (shouldFinalize) {
-  //     const blob = new Blob(data/*, {type: 'audio/webm;codecs=opus'}*/);
-  //     savedBlobs.push([lastSaveTime, blob]);
-
-  //     data = [];
-  //     dataSize = 0;
-  //     lastSaveTime = new Date().getTime();
-
-  //     const record = document.createElement('record');
-  //     record.innerHTML = `${lastSaveTime}, ${blob.size} record`;
-  //     storagePanel.appendChild(record);
-
-  //     record.addEventListener('click', () => {
-  //       play(blob);
-  //     });
-
-  //     if (callWhenFinalized) {
-  //       callWhenFinalized(blob);
-  //       callWhenFinalized = undefined;
-  //     }
-
-  //     console.log('finalized', savedBlobs);
-  //   }
-
-  // }
-
-  // function addData(event) {
-  //   // should write out file if >1min of data collected
-  //   if (event.data.size > 0) {
-  //     data.push(event.data);
-  //     dataSize += event.data.size;
-  //     totalDataSize += event.data.size;
-  //   }
-
-  //   const now = new Date().getTime();
-
-  //   if (now - lastSaveTime > saveBlockDuration) {
-  //     const blob = new Blob(data);
-
-  //     savedBlobs.push([lastSaveTime, blob]) ;
-
-  //     data = [];
-  //     dataSize = 0;
-
-  //     lastSaveTime = now;
-
-  //     console.log({savedBlobs});
-  //   }
-  // }
-
   function updateTime() {
     const duration = new Date().getTime() - startTime,
           milliseconds = duration % 1000,
           totalSeconds = Math.floor(duration / 1000),
           seconds = totalSeconds % 60,
-          minutes = Math.floor(totalSeconds / 60);
+          minutes = Math.floor(totalSeconds / 60),
+          totalMinutes = Math.floor(duration / (60 * 1000)),
+          hours = Math.floor(totalMinutes / 60);
 
-    hoursEl.innerHTML = 0;
+    hoursEl.innerHTML = hours;
     minutesEl.innerHTML = minutes;
     secondsEl.innerHTML = seconds;
     millisecondsEl.innerHTML = milliseconds < 100 ? (milliseconds < 10 ? `00${milliseconds}` : `0${milliseconds}`) : milliseconds;
@@ -862,7 +685,9 @@ function draw({analyser}) {
       mainContext.putImageData(mainPixel, nextSliceIndex, i);
     }
 
-    displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
+    // displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
+
+    displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
 
     const total = sum / nodes.children.length;
 
