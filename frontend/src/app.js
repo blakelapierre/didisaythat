@@ -103,8 +103,17 @@ mainContext.imageSmoothingEnabled = false;
 history.appendChild(displayCanvas);
 // history.appendChild(mainCanvas);
 
-displayCanvas.width = 1000;
-displayCanvas.height = 200;
+
+window.addEventListener('resize', event => setCanvasSize(displayCanvas));
+
+document.addEventListener('load', event => setCanvasSize(displayCanvas));
+
+function setCanvasSize(canvas) {
+  const parent = canvas.parentElement;
+
+  canvas.width = parent.clientWidth;
+  canvas.height = parent.clientHeight;
+}
 
 
 // getUserMedia({
@@ -130,7 +139,7 @@ const saveBlockDuration = 5 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
 const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
-const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64]);
+const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64, 1000 / 128]);
 const historyLengths = new Cycle([60, 90, 120, 150, 180, 240, 300, 500, 1000, 1500]);
 
 const barPosition = ['left', 'top', 'right', 'bottom'];
@@ -751,42 +760,10 @@ function draw({analyser}) {
 
     analyser.getByteFrequencyData(data);
 
-    const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
-
-    // if (now - accumulationStart > accumulationPeriod) {
     if (now - accumulationStart > accumulationPeriodsCycle.value) {
-      // if (nextSliceIndex === 0) history.insertBefore(history.children[history.children.length - 1], history.firstChild);
-
-      // const slice = history.children[nextSliceIndex];
-
       if (position < mainCanvas.width) position++;
 
-      // // const slice = history.lastElementChild;
-
-      // slice.approximateTime = now;
-
       for (let i = 0; i < accumulator.length; i++) accumulator[i] = 0;
-
-      // slice.classList.remove('mover');
-      // slice.classList.remove('start');
-      // slice.classList.remove('end');
-
-      // if (indicators.mover) {
-      //   indicators.mover.classList.remove('mover');
-
-      //   if (indicators.mover === indicators.end) {
-      //     indicators.start.classList.remove('start');
-      //     indicators.end.classList.remove('end');
-
-      //     indicators.start = indicators.end = indicators.mover = undefined;
-      //   }
-      //   else {
-      //     indicators.mover = indicators.mover.previousElementSibling;
-
-      //     if (indicators.mover) indicators.mover.classList.add('mover'); // can this be reorganized to remove the if?
-      //   }
-      // }
-
 
       accumulations = 1;
       accumulationStart = now;
@@ -872,33 +849,20 @@ function draw({analyser}) {
       }
     }
 
+    const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
+
     for (let i = 0; i < mainCanvas.height; i++) {
-      const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
+      const averagedValue = accumulator[accumulator.length - 1 - i] / accumulations;
 
-      // mainPixelData[0] = averagedValue;
-      // mainPixelData[1] = averagedValue;
-      // mainPixelData[2] = averagedValue;
-      // mainPixelData[3] = 255;
+      mainPixelData[0] = averagedValue;
+      mainPixelData[1] = averagedValue;
+      mainPixelData[2] = averagedValue;
+      mainPixelData[3] = 255;
 
-      // mainContext.putImageData(mainPixel, nextSliceIndex, i);
-
-      mainContext.fillStyle = `rgba(${averagedValue}, ${averagedValue}, ${averagedValue}, 1)`;
-      // mainContext.fillStyle = `rgba(255, 255, 255, ${averagedValue / 255})`;
-      mainContext.fillRect(nextSliceIndex, i, 1, 1);
+      mainContext.putImageData(mainPixel, nextSliceIndex, i);
     }
 
-    // displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - 1, mainCanvas.height, Math.floor((nextSliceIndex / mainCanvas.width) * displayCanvas.width), 0
     displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
-
-    // // const slice = history.children[0];
-    // const slice = history.children[nextSliceIndex];
-    // for (let i = 0; i < slice.children.length; i++) {
-    //   const node = slice.children[i];
-
-    //   const averagedValue = Math.floor(accumulator[accumulator.length - i - 1] / accumulations);
-
-    //   node.style.opacity = averagedValue / 255;
-    // }
 
     const total = sum / nodes.children.length;
 
