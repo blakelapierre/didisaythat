@@ -242,7 +242,7 @@ class Recorder {
 
       const record = document.createElement('record');
 
-      record.innerHTML = `${this.recording.start}, ${this.recording.blob.size} record`;
+      record.innerHTML = `${new Date(this.recording.start)}, ${this.recording.blob.size} record`;
 
       const index = this.recordings.length - 1;
 
@@ -733,13 +733,22 @@ function draw({analyser}) {
 
     const wrapped = offsets.view % mainCanvas.width;
 
-    displayContext.drawImage(mainCanvas,
-      nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height,
-      nextSliceIndex / mainCanvas.width * displayCanvas.width,
-      0,
-      displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width),
-      displayCanvas.height);
+    if (offsets.view > 0) {
+      displayContext.drawImage(mainCanvas,
+        0, 0, mainCanvas.width, mainCanvas.height,
+        0, 0, displayCanvas.width, displayCanvas.height);
+    }
+    else {
+      displayContext.drawImage(mainCanvas,
+        offsets.view > 0 ? 0 : nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height,
+        // nextSliceIndex / mainCanvas.width * displayCanvas.width,
+        0,
+        0,
+        // displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width),
+        displayCanvas.width,
+        displayCanvas.height);
 
+    }
     // console.log(wrapped, nextSliceIndex, offsets.view);
 
     // displayContext.drawImage(mainCanvas,
