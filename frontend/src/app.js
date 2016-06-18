@@ -76,15 +76,11 @@ function handleAndroidComponent() {
       }
 
       close.close = () => {
-        decrementAndroidMessageCount();
-
         android.style.display = 'none';
 
-        return false;
+        localStorage.setItem('androidMessageCount', androidMessageCount);
 
-        function decrementAndroidMessageCount() {
-          localStorage.setItem('androidMessageCount', androidMessageCount);
-        }
+        return false;
       };
     }
   }
