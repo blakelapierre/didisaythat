@@ -50,8 +50,10 @@ catch (e) {
   markNotCapable(e);
 }
 
-if (/android/i.test(navigator.userAgent)) {
+if (true || /android/i.test(navigator.userAgent)) {
   const android = document.getElementsByTagName('android')[0];
+
+  console.dir(android);
 
   android.style.display = 'flex';
 }
@@ -164,7 +166,6 @@ function getUserMedia(options) {
 }
 
 function play(blob, position = 0) {
-  console.log(blob);
   const url = window.URL.createObjectURL(blob);
 
   audio.src = url;
@@ -186,8 +187,6 @@ class Recorder {
   }
 
   _startRecording (stream, duration) {
-    console.log('recording started');
-
     const recording = new Recording(new MediaRecorder(stream), duration);
 
     recording.recordingEnding = () => {
@@ -195,8 +194,6 @@ class Recorder {
     };
 
     recording.onDurationMet = () => {
-      console.log('duration met');
-
       this.recordings.push([this.recording.start, this.recording.blob]);
 
       const record = document.createElement('record');
@@ -210,8 +207,6 @@ class Recorder {
       storagePanel.appendChild(record);
 
       this.recording = this.otherRecording;
-
-      console.log(this.recordings);
     };
 
     return recording;
@@ -227,10 +222,7 @@ class Recording {
 
     this.data = [];
 
-    console.log(recorder);
-
     recorder.addEventListener('dataavailable', event => {
-      console.log(event.data);
       if (event.data.size > 0) {
         this.data.push(event.data); // hold on to this until needed, it's too expensive to push it into a Blob, just yet
       }
@@ -244,13 +236,11 @@ class Recording {
         }
       }
 
-      console.log('waiting', this.waitingForData);
       if (this.waitingForData) this.waitingForData();
     });
 
     recorder.addEventListener('stop', event => {
       // should be saved now
-      console.log('recorder stopped');
       this.onDurationMet();
     });
 
@@ -311,7 +301,7 @@ function attachRecorder(stream) {
 
     // callWhenFinalized = blob => play(blob, delta);
 
-    console.log(startTime, delta, data);
+    // console.log(startTime, delta, data);
 
     // recording.getLatestBlob().then(blob => console.log('blob', blob));
 
@@ -526,7 +516,7 @@ function setAnalyserSize(analyser, size, nodes) {
     //growing, split
     const levels = count / ((2 * accumulator.length) || 1);
 
-    console.log({levels, count, accumulator: accumulator.length});
+    // console.log({levels, count, accumulator: accumulator.length});
 
     for (let i = count - 1; i >= 0; i--) {
 
@@ -699,7 +689,7 @@ function draw({analyser}) {
 
     displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height, nextSliceIndex / mainCanvas.width * displayCanvas.width, 0, displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width), displayCanvas.height);
 
-    console.log(wrapped, nextSliceIndex, offsets.view);
+    // console.log(wrapped, nextSliceIndex, offsets.view);
 
     if (wrapped > 0) {
       // displayContext.drawImage(mainCanvas, 0, 0, nextSliceIndex, mainCanvas.height, 0, 0, wrapped - 1 / mainCanvas.width, displayCanvas.height);
