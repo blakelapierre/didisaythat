@@ -2,5 +2,10 @@
   "name": "Did I Say That?",
   "icons": [],
   "start_url": "index.html",
-  "display": "standalone"
+  "display": "standalone",
+  "icons": [{
+    "src": "images/icon196.png",
+    "sizes": "196x196",
+    "type": "image/png"
+  }]
 }
