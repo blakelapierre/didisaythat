@@ -245,46 +245,64 @@ body {
         menu {
           display: none;
 
-          position: absolute;
+          content {
+            controllables {
+              bars {
+                more {
 
-          margin: 0;
-          padding: 0;
+                }
 
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
+                less {
 
-          flex-direction: column;
-
-          justify-content: space-around;
-          align-items: center;
-
-          font-size: 3em;
-
-          color: #ddd;
-
-          // background-color: rgba(0, 0, 0, 0.33);
-
-          user-select: none;
-
-          text-shadow: #000 0px 0px 1em;
-
-          &.visible {
-            display: flex;
-          }
-
-          more-bars, less-bars {
-            cursor: pointer;
-
-            user-select: none;
-
-            &:hover {
-              color: #fff;
-              text-shadow: #999 0px 0px 0.5em;
+                }
+              }
             }
           }
         }
+
+      //   menu {
+      //     display: none;
+
+      //     position: absolute;
+
+      //     margin: 0;
+      //     padding: 0;
+
+      //     top: 0;
+      //     left: 0;
+      //     right: 0;
+      //     bottom: 0;
+
+      //     flex-direction: column;
+
+      //     justify-content: space-around;
+      //     align-items: center;
+
+      //     font-size: 3em;
+
+      //     color: #ddd;
+
+      //     // background-color: rgba(0, 0, 0, 0.33);
+
+      //     user-select: none;
+
+      //     text-shadow: #000 0px 0px 1em;
+
+      //     &.visible {
+      //       display: flex;
+      //     }
+
+      //     more-bars, less-bars {
+      //       cursor: pointer;
+
+      //       user-select: none;
+
+      //       &:hover {
+      //         color: #fff;
+      //         text-shadow: #999 0px 0px 0.5em;
+      //       }
+      //     }
+      //   }
       }
 
       lower {

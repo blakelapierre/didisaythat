@@ -104,6 +104,7 @@ const noPermission = document.getElementById('no-permission'),
       authorized = document.getElementById('authorized'),
       hint = noPermission.children[1];
 
+
 const recent = document.getElementById('recent'),
       nodes = document.getElementById('nodes'),
       history = document.getElementById('history'),
@@ -117,6 +118,18 @@ const hoursEl = document.getElementsByTagName('hours')[0],
 
 const storagePanel = document.getElementsByTagName('storage-panel')[0];
 
+const upper = document.getElementsByTagName('upper')[0],
+      lower = document.getElementsByTagName('lower')[0];
+
+addMenu(upper);
+addMenu(lower);
+
+function addMenu(container) {
+  container.ontouchstart = event => {
+    console.log('touchstart', event);
+  };
+}
+
 const audio = document.createElement('audio');
 
 document.body.insertBefore(audio, document.body.firstChild);
@@ -129,16 +142,12 @@ const mainCanvas = document.createElement('canvas'),
       mainPixelData = mainPixel.data;
 
 history.appendChild(displayCanvas);
-// history.appendChild(mainCanvas);
 
 mainContext.imageSmoothingEnabled = false;
 displayContext.imageSmoothingEnabled = false;
 
-
 window.addEventListener('resize', event => setCanvasSize(displayCanvas));
 history.addEventListener('resize', event => setCanvasSize(displayCanvas));
-
-document.addEventListener('load', event => setCanvasSize(displayCanvas));
 
 function setCanvasSize(canvas) {
   const parent = canvas.parentElement;
@@ -146,8 +155,15 @@ function setCanvasSize(canvas) {
   canvas.width = parent.clientWidth;
   canvas.height = parent.clientHeight;
 
-  mainContext.imageSmoothingEnabled = false;
-  displayContext.imageSmoothingEnabled = false;
+  disableSmoothing(displayContext);
+  disableSmoothing(mainContext);
+
+  function disableSmoothing(context) {
+    context.imageSmoothingEnabled = false;
+    context.mozImageSmoothingEnabled = false;
+    context.webkitImageSmoothingEnabled = false;
+    context.msImageSmoothingEnabled = false;
+  }
 }
 
 
@@ -170,7 +186,7 @@ getUserMedia({audio: true})
   .catch(mediaError);
 
 // const saveBlockDuration = 60 * 1000; // one minute
-const saveBlockDuration = 5 * 1000; // five seconds
+const saveBlockDuration = 30 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
 const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
@@ -597,6 +613,8 @@ function draw({analyser}) {
   noPermission.classList.add('granted');
   authorized.classList.add('authorized');
 
+  setCanvasSize(displayCanvas);
+
   updates.push(update);
 
   requestUpdateLoop();
@@ -715,13 +733,25 @@ function draw({analyser}) {
 
     const wrapped = offsets.view % mainCanvas.width;
 
-    displayContext.drawImage(mainCanvas, nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height, nextSliceIndex / mainCanvas.width * displayCanvas.width, 0, displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width), displayCanvas.height);
+    displayContext.drawImage(mainCanvas,
+      nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height,
+      nextSliceIndex / mainCanvas.width * displayCanvas.width,
+      0,
+      displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width),
+      displayCanvas.height);
 
     // console.log(wrapped, nextSliceIndex, offsets.view);
 
-    if (wrapped > 0) {
-      // displayContext.drawImage(mainCanvas, 0, 0, nextSliceIndex, mainCanvas.height, 0, 0, wrapped - 1 / mainCanvas.width, displayCanvas.height);
-    }
+    // displayContext.drawImage(mainCanvas,
+    //   0, 0, nextSliceIndex, mainCanvas.height,
+    //   0, 0, (nextSliceIndex / mainCanvas.width) * displayCanvas.width, displayCanvas.height);
+
+
+    // if (wrapped > 0) {
+    //   displayContext.drawImage(mainCanvas,
+    //     0, 0, nextSliceIndex, mainCanvas.height,
+    //     0, 0, (nextSliceIndex / mainCanvas.width) * mainCanvas.width, displayCanvas.height);
+    // }
 
     const total = sum / nodes.children.length;
 

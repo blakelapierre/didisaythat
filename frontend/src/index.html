@@ -32,14 +32,10 @@
       </no-permission>
 
       <authorized id="authorized">
-        <upper
-          ontouchstart="return this.firstElementChild.touchStart(event)"
-          ontouchend="return this.firstElementChild.touchEnd(event)">
+        <upper>
           <recent id="recent"
                onmousewheel="return this.cycleBarCount(event.deltaY < 0)"
                onwheel="return this.cycleBarCount(event.deltaY < 0) /* firefox*/"
-               onmousedown="return this.mouseDown(event)"
-               onmouseup="return this.mouseUp(event)"
                onmousemove="return this.mouseMove(event)">
             <nodes id="nodes"
                    class="left"
@@ -48,6 +44,17 @@
             </nodes>
           </recent>
 
+          <menu>
+            <content>
+              <controllables>
+                <bars>
+                  <more>More Bars</more>
+                  <less>Less Bars</less>
+                </bars>
+              </controllables>
+            </content>
+          </menu>
+<!--
           <menu id="recent-menu"
                 onmouseup="return this.previousElementSibling.mouseUp(event)">
             <more-bars onmouseup="this.parentNode.previousElementSibling.cycleBarCount()">
@@ -56,12 +63,13 @@
             <less-bars onmouseup="this.parentNode.previousElementSibling.cycleBarCount(true)">
             Less Bars
             <less-bars>
-          </menu>
+          </menu> -->
         </upper>
 
         <lower>
           <history id="history"
                    onmousewheel="return cycleHistorySize(event.deltaY < 0)"
+                   onwheel="return cycleHistorySize(event.deltaY < 0)"
                    onmousedown="return this.mouseDown(event)"
                    onmouseup="return this.mouseUp(event)"
                    oncontextmenu="return cycleAccumulationPeriod()">
