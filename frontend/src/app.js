@@ -50,12 +50,44 @@ catch (e) {
   markNotCapable(e);
 }
 
-if (true || /android/i.test(navigator.userAgent)) {
-  const android = document.getElementsByTagName('android')[0];
+handleAndroidComponent();
 
-  console.dir(android);
+function handleAndroidComponent() {
+  if (/android/i.test(navigator.userAgent)) {
+    let androidMessageCount = parseInt(localStorage.getItem('androidMessageCount'));
 
-  android.style.display = 'flex';
+    if (isNaN(androidMessageCount)) androidMessageCount = 3;
+
+    if (androidMessageCount > 0) {
+      const android = document.getElementsByTagName('android')[0],
+            close = android.getElementsByTagName('close')[0];
+
+      android.style.display = 'flex';
+      androidMessageCount--;
+
+      if (androidMessageCount === 0) {
+        close.innerHTML = 'Don\'t Remind Me Again';
+      }
+      else if (androidMessageCount === 1) {
+        close.innerHTML = `Remind Me At Least 1 More Time`;
+      }
+      else {
+        close.innerHTML = `Remind Me At Least ${androidMessageCount} More Times`;
+      }
+
+      close.close = () => {
+        decrementAndroidMessageCount();
+
+        android.style.display = 'none';
+
+        return false;
+
+        function decrementAndroidMessageCount() {
+          localStorage.setItem('androidMessageCount', androidMessageCount);
+        }
+      };
+    }
+  }
 }
 
 function markNotCapable(reason) {
