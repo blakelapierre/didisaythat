@@ -105,8 +105,9 @@ const noPermission = document.getElementById('no-permission'),
       hint = noPermission.children[1];
 
 
-const recent = document.getElementById('recent'),
-      nodes = document.getElementById('nodes'),
+const upper = document.getElementsByTagName('upper')[0],
+      recent = upper.getElementsByTagName('recent')[0],
+      nodes = recent.getElementsByTagName('nodes')[0],
       history = document.getElementById('history'),
       time = document.getElementById('time'),
       recentMenu = document.getElementById('recent-menu');
@@ -118,16 +119,87 @@ const hoursEl = document.getElementsByTagName('hours')[0],
 
 const storagePanel = document.getElementsByTagName('storage-panel')[0];
 
-const upper = document.getElementsByTagName('upper')[0],
-      lower = document.getElementsByTagName('lower')[0];
+const lower = document.getElementsByTagName('lower')[0];
 
 addMenu(upper);
 addMenu(lower);
 
+upper.onmousewheel = event => recent.cycleBarCount(event.deltaY < 0); // probably should do this better?
+upper.onwheel = event => recent.cycleBarCount(event.deltaY < 0); // probably should do this better?
+
 function addMenu(container) {
-  container.ontouchstart = event => {
-    console.log('touchstart', event);
+  const menu = container.getElementsByTagName('menu')[0];
+
+  let timer, defaultFn;
+
+  container.onmousedown = event => {
+    if (event.button === 0) {
+      defaultFn = mouseDefault;
+      queueMenu(event.clientX, event.clientY);
+    }
+
+    return false;
   };
+
+  container.oncontextmenu = event => {
+    nodes.cycleBarEffect(true);
+
+    return false;
+  };
+
+  container.ontouchstart = event => {
+    if (event.touches.length === 1) {
+      const [{clientX, clientY}] = event.touches;
+
+      defaultFn = touchDefault;
+      queueMenu(clientX, clientY);
+    }
+
+    return false;
+  };
+
+  container.ontouchend = processEnd;
+  container.onmouseup = processEnd;
+
+  function mouseDefault(event) {
+    nodes.cycleBarEffect();
+  }
+
+  function touchDefault(event) {
+
+  }
+
+  function queueMenu(x, y) {
+    timer = setTimeout(() => {
+      showMenu(x, y);
+      timer = undefined;
+    }, 125);
+  }
+
+  function processEnd(event) {
+    if (timer) {
+      clearTimeout(timer);
+      defaultFn(event);
+
+      timer = undefined;
+    }
+
+    return hideMenu(event);
+  }
+
+  function showMenu(x, y) {
+    menu.style.display = 'flex';
+    menu.style.left = `${x - menu.clientWidth / 2}px`;
+    menu.style.top = `${y - menu.clientHeight / 2}px`;
+
+    return false;
+  }
+
+  function hideMenu(event) {
+    menu.style.display = 'none';
+
+    return false;
+  }
 }
 
 const audio = document.createElement('audio');
@@ -139,7 +211,9 @@ const mainCanvas = document.createElement('canvas'),
       displayCanvas = document.createElement('canvas'),
       displayContext = displayCanvas.getContext('2d'),
       mainPixel = mainContext.createImageData(1, 1),
-      mainPixelData = mainPixel.data;
+      mainPixelData = mainPixel.data,
+      mainCanvasColumnTime = [];
+
 
 history.appendChild(displayCanvas);
 
@@ -148,6 +222,13 @@ displayContext.imageSmoothingEnabled = false;
 
 window.addEventListener('resize', event => setCanvasSize(displayCanvas));
 history.addEventListener('resize', event => setCanvasSize(displayCanvas));
+
+displayCanvas.addEventListener('click', event => {
+  const sliceIndex = Math.floor(event.offsetX / displayCanvas.width * mainCanvas.width);
+
+  console.log(sliceIndex, mainCanvasColumnTime[sliceIndex]);
+
+});
 
 function setCanvasSize(canvas) {
   const parent = canvas.parentElement;
@@ -717,6 +798,8 @@ function draw({analyser}) {
 
     // const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
     const nextSliceIndex = mainCanvas.width - ((position + offsets.view) % mainCanvas.width) - 1;
+
+    mainCanvasColumnTime[nextSliceIndex] = accumulationStart;
 
     for (let i = 0; i < mainCanvas.height; i++) {
       const averagedValue = accumulator[accumulator.length - 1 - i] / accumulations;

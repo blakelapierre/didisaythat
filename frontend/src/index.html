@@ -33,7 +33,30 @@
 
       <authorized id="authorized">
         <upper>
-          <recent id="recent"
+          <recent>
+            <nodes class="left"></nodes>
+          </recent>
+
+          <menu>
+            <content>
+              <controllables>
+                <bars>
+                  <more>More Bars</more>
+                  <less>Less Bars</less>
+                </bars>
+                <smoothing>
+                  <more>More Smoothing</more>
+                  <less>Less Smoothing</less>
+                </smoothing>
+                <gain>
+                  <more>More Gain</more>
+                  <less>Less Gain</less>
+                </gain>
+              </controllables>
+            </content>
+          </menu>
+
+<!--           <recent id="recent"
                onmousewheel="return this.cycleBarCount(event.deltaY < 0)"
                onwheel="return this.cycleBarCount(event.deltaY < 0) /* firefox*/"
                onmousemove="return this.mouseMove(event)">
@@ -53,7 +76,7 @@
                 </bars>
               </controllables>
             </content>
-          </menu>
+          </menu> -->
 <!--
           <menu id="recent-menu"
                 onmouseup="return this.previousElementSibling.mouseUp(event)">
@@ -70,11 +93,30 @@
           <history id="history"
                    onmousewheel="return cycleHistorySize(event.deltaY < 0)"
                    onwheel="return cycleHistorySize(event.deltaY < 0)"
-                   onmousedown="return this.mouseDown(event)"
-                   onmouseup="return this.mouseUp(event)"
                    oncontextmenu="return cycleAccumulationPeriod()">
           </history>
           <playback-visuals></playback-visuals>
+
+
+
+          <menu>
+            <content>
+              <controllables>
+                <speed>
+                  <faster>Faster</faster>
+                  <slower>Slower</slower>
+                </speed>
+                <length>
+                  <more>More Length</more>
+                  <less>Less Length</less>
+                </length>
+                <smoothing>
+                  <enabled>Smooth</enabled>
+                  <disabled>Hard</disabled>
+                </smoothing>
+              </controllables>
+            </content>
+          </menu>
 
           <!-- <time id="time">
             <span><hours></hours> <sup>x60 +</sup></span>
