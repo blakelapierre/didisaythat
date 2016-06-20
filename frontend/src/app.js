@@ -131,6 +131,7 @@ function addMenu(container) {
   const menu = container.getElementsByTagName('menu')[0];
 
   let timer, defaultFn;
+  let touches, move;
 
   container.onmousedown = event => {
     if (event.button === 0) {
@@ -161,6 +162,14 @@ function addMenu(container) {
   container.ontouchend = processEnd;
   container.onmouseup = processEnd;
 
+  container.onmousemove = event => {
+    move = event;
+  };
+
+  container.ontouchmove = event => {
+    touches = event.touches;
+  };
+
   function mouseDefault(event) {
     nodes.cycleBarEffect();
   }
@@ -171,7 +180,9 @@ function addMenu(container) {
 
   function queueMenu(x, y) {
     timer = setTimeout(() => {
-      showMenu(x, y);
+      const e = touches ? touches[0] : move;
+      showMenu(e.clientX, e.clientY);
+      // showMenu(x, y);
       timer = undefined;
     }, 125);
   }
