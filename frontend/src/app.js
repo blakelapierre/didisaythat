@@ -650,19 +650,22 @@ function setAnalyserSize(analyser, size, nodes) {
 
   if (count > accumulator.length) {
     //growing, split
-    const levels = count / ((2 * accumulator.length) || 1);
+    const levels = Math.pow(2, count / ((2 * accumulator.length) || 1));
 
-    // console.log({levels, count, accumulator: accumulator.length});
+    for (let i = 0; i < count / levels; i++) {
+      const parts = (accumulator[i] / levels || 0) / (accumulations || 1);
 
-    for (let i = count - 1; i >= 0; i--) {
-
+      accumulator[levels*i] = parts;
+      accumulator[levels*i+1] = parts;
     }
+
+    accumulations = 1;
   }
   else {
     //shrinking, combine
+    for (let i = 0; i < count; i++) accumulator[i] = 0;
   }
 
-  for (let i = 0; i < count; i++) accumulator[i] = 0;
   accumulator.splice(count);
 
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
