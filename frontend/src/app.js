@@ -636,6 +636,40 @@ function attachAnalyser({stream, data, lastSaveTime}) {
   return {stream, data, lastSaveTime, analyser};
 }
 
+const accumulationStrategies = {
+  'mean': {
+    'split': (accumulator, count) => {
+      const levels = Math.log2(count) - Math.log2(accumulator.length || 1),
+            divisor = Math.pow(2, levels);
+
+      for (let i = 0; i < count / divisor; i++) {
+        const parts = (accumulator[i] / divisor || 0) / (accumulations || 1);
+
+        accumulator[divisor*i] = parts;
+        accumulator[divisor*i+1] = parts;
+      }
+
+      accumulations = 1;
+    },
+    'combine': (accumulator, count) => {
+      //shrinking, combine
+      const levels = Math.log2(accumulator.length || 1) - Math.log2(count || 1),
+            divisor = Math.pow(2, levels);
+
+      for (let i = 0; i < accumulator.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < divisor; j++) sum += accumulator[i * j + j];
+        accumulator[i] = sum / divisor;
+      }
+    },
+  },
+  'max': {
+
+  }
+};
+
+let accumulationStrategy = accumulationStrategies.mean;
+
 function setAnalyserSize(analyser, size, nodes) {
   let fftSize = Math.max(32, Math.min(32768, size * 4));
 
@@ -648,32 +682,8 @@ function setAnalyserSize(analyser, size, nodes) {
 
   // need to distribute current accumulations
 
-  if (count > accumulator.length) {
-    //growing, split
-    const levels = Math.log2(count) - Math.log2(accumulator.length || 1),
-          divisor = Math.pow(2, levels);
-
-    for (let i = 0; i < count / divisor; i++) {
-      const parts = (accumulator[i] / divisor || 0) / (accumulations || 1);
-
-      accumulator[divisor*i] = parts;
-      accumulator[divisor*i+1] = parts;
-    }
-
-    accumulations = 1;
-  }
-  else {
-    //shrinking, combine
-    const levels = Math.log2(accumulator.length || 1) - Math.log2(count || 1),
-          divisor = Math.pow(2, levels);
-
-    for (let i = 0; i < accumulator.length; i++) {
-      let sum = 0;
-      for (let j = 0; j < divisor; j++) sum += accumulator[i * j + j];
-      accumulator[i] = sum / divisor;
-    }
-
-  }
+  if (count > accumulator.length) accumulationStrategy.split(accumulator, count);
+  else accumulationStrategy.combine(accumulator, count);
 
   accumulator.splice(count);
 
