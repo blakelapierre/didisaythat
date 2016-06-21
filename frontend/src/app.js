@@ -695,9 +695,9 @@ const accumulationStrategies = {
   }
 };
 
-// let accumulationStrategy = accumulationStrategies.mean;
+let accumulationStrategy = accumulationStrategies.mean;
 // let accumulationStrategy = accumulationStrategies.max;
-let accumulationStrategy = accumulationStrategies.min;
+// let accumulationStrategy = accumulationStrategies.min;
 
 function setAnalyserSize(analyser, size, nodes) {
   let fftSize = Math.max(32, Math.min(32768, size * 4));
