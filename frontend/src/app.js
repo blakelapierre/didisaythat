@@ -662,13 +662,31 @@ const accumulationStrategies = {
         accumulator[i] = sum / divisor;
       }
     },
+    'add': (accumulator, position, value) => {
+      accumulator[position] += value;
+    },
+    'getValue': (accumulator, position) => {
+      return  accumulator[position] / accumulations;
+    }
   },
   'max': {
+    split(accumulator, count) {
 
+    },
+    combine(accumulator, count) {
+
+    },
+    add(accumulator, position, value) {
+      accumulator[position] = Math.max(accumulator[position] || 0, value);
+    },
+    getValue(accumulator, position) {
+      return accumulator[position];
+    }
   }
 };
 
-let accumulationStrategy = accumulationStrategies.mean;
+// let accumulationStrategy = accumulationStrategies.mean;
+let accumulationStrategy = accumulationStrategies.max;
 
 function setAnalyserSize(analyser, size, nodes) {
   let fftSize = Math.max(32, Math.min(32768, size * 4));
@@ -761,8 +779,9 @@ function draw({analyser}) {
       const total = data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7],
             average = total / 8;
 
-      // sum += av; // we want the background to be black in this case (barsCount === 1) [code needs some reworking]
-      accumulator[0] += average;
+      // sum += average; // we want the background to be black in this case (barsCount === 1) [code needs some reworking]
+      // accumulator[0] += average;
+      accumulationStrategy.add(accumulator, 0, average);
 
       child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
 
@@ -780,7 +799,9 @@ function draw({analyser}) {
               average = total / 4;
 
         sum += average;
-        accumulator[i] += average;
+
+        accumulationStrategy.add(accumulator, i, average);
+        // accumulator[i] += average;
 
         child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
 
@@ -799,7 +820,8 @@ function draw({analyser}) {
               average = total / 2;
 
         sum += average;
-        accumulator[i] += average;
+        accumulationStrategy.add(accumulator, i, average);
+        // accumulator[i] += average;
 
         child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
 
@@ -817,7 +839,8 @@ function draw({analyser}) {
         const value = data[i];
 
         sum += value;
-        accumulator[i] += value;
+        accumulationStrategy.add(accumulator, i, value);
+        // accumulator[i] += value;
 
         child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
 
@@ -835,11 +858,11 @@ function draw({analyser}) {
     mainCanvasColumnTime[nextSliceIndex] = accumulationStart;
 
     for (let i = 0; i < mainCanvas.height; i++) {
-      const averagedValue = accumulator[accumulator.length - 1 - i] / accumulations;
+      const value = accumulationStrategy.getValue(accumulator, accumulator.length - 1 - i);
 
-      mainPixelData[0] = averagedValue;
-      mainPixelData[1] = averagedValue;
-      mainPixelData[2] = averagedValue;
+      mainPixelData[0] = value;
+      mainPixelData[1] = value;
+      mainPixelData[2] = value;
       mainPixelData[3] = 255;
 
       mainContext.putImageData(mainPixel, nextSliceIndex, i);
