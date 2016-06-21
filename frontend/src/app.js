@@ -281,7 +281,7 @@ getUserMedia({audio: true})
 const saveBlockDuration = 30 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
-const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
+const barCounts = new Cycle([1, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
 const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64, 1000 / 128]);
 const historyLengths = new Cycle([60, 90, 120, 150, 180, 240, 300, 500, 1000, 1500]);
 
@@ -650,7 +650,7 @@ function setAnalyserSize(analyser, size, nodes) {
 
   if (count > accumulator.length) {
     //growing, split
-    const levels = count / ((2 * accumulator.length) || 1),
+    const levels = Math.log2(count) - Math.log2(accumulator.length || 1),
           divisor = Math.pow(2, levels);
 
     for (let i = 0; i < count / divisor; i++) {
@@ -664,12 +664,14 @@ function setAnalyserSize(analyser, size, nodes) {
   }
   else {
     //shrinking, combine
+    const levels = Math.log2(accumulator.length || 1) - Math.log2(count || 1),
+          divisor = Math.pow(2, levels);
 
-    const levels = Math.pow(2, count / ((2 * accumulator.length) || 1));
-
-    console.log(levels);
-
-    for (let i = 0; i < count; i++) accumulator[i] = 0;
+    for (let i = 0; i < accumulator.length; i++) {
+      let sum = 0;
+      for (let j = 0; j < divisor; j++) sum += accumulator[i * j + j];
+      accumulator[i] = sum / divisor;
+    }
 
   }
 
