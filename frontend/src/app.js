@@ -682,11 +682,22 @@ const accumulationStrategies = {
     getValue(accumulator, position) {
       return accumulator[position];
     }
+  },
+  'min': {
+    split() {},
+    combine() {},
+    add(accumulator, position, value) {
+      accumulator[position] = Math.min(accumulator[position] || 255, value);
+    },
+    getValue(accumulator, position) {
+      return accumulator[position];
+    }
   }
 };
 
 // let accumulationStrategy = accumulationStrategies.mean;
-let accumulationStrategy = accumulationStrategies.max;
+// let accumulationStrategy = accumulationStrategies.max;
+let accumulationStrategy = accumulationStrategies.min;
 
 function setAnalyserSize(analyser, size, nodes) {
   let fftSize = Math.max(32, Math.min(32768, size * 4));
