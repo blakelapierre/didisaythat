@@ -1,3 +1,18 @@
+@keyframes roll-in {
+  // 0% {
+  //   transform: rotateX(-180deg);
+  // }
+  // 100% {
+  //   transform: rotateX(0deg);
+  // }
+
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 100%;
+  }
+}
 
 body {
   position: fixed;
@@ -200,7 +215,6 @@ body {
                 &:hover {
                   color: #f00;
                 }
-                color: #0f0;
               }
 
               less {
@@ -442,6 +456,11 @@ body {
         background-color: rgba(0, 0, 0, 0.5);
 
         cursor: pointer;
+
+        canvas {
+          animation: roll-in 0.35s cubic-bezier(1, 1, 1, 1.25);
+          backface-visibility: hidden;
+        }
       }
 
       time {

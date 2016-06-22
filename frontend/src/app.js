@@ -231,8 +231,8 @@ history.appendChild(displayCanvas);
 mainContext.imageSmoothingEnabled = false;
 displayContext.imageSmoothingEnabled = false;
 
-window.addEventListener('resize', event => setCanvasSize(displayCanvas));
-history.addEventListener('resize', event => setCanvasSize(displayCanvas));
+window.addEventListener('resize', event => setCanvasSize(displayCanvas, displayContext));
+history.addEventListener('resize', event => setCanvasSize(displayCanvas, displayContext));
 
 displayCanvas.addEventListener('click', event => {
   const sliceIndex = Math.floor(event.offsetX / displayCanvas.width * mainCanvas.width);
@@ -240,23 +240,6 @@ displayCanvas.addEventListener('click', event => {
   console.log(sliceIndex, mainCanvasColumnTime[sliceIndex]);
 
 });
-
-function setCanvasSize(canvas) {
-  const parent = canvas.parentElement;
-
-  canvas.width = parent.clientWidth;
-  canvas.height = parent.clientHeight;
-
-  disableSmoothing(displayContext);
-  disableSmoothing(mainContext);
-
-  function disableSmoothing(context) {
-    context.imageSmoothingEnabled = false;
-    context.mozImageSmoothingEnabled = false;
-    context.webkitImageSmoothingEnabled = false;
-    context.msImageSmoothingEnabled = false;
-  }
-}
 
 
 // getUserMedia({
@@ -332,15 +315,15 @@ class Recorder {
     recording.onDurationMet = () => {
       this.recordings.push([this.recording.start, this.recording.blob]);
 
-      const record = document.createElement('record');
+      // const record = document.createElement('record');
 
-      record.innerHTML = `${new Date(this.recording.start)}, ${this.recording.blob.size} record`;
+      // record.innerHTML = `${new Date(this.recording.start)}, ${this.recording.blob.size} record`;
 
-      const index = this.recordings.length - 1;
+      // const index = this.recordings.length - 1;
 
-      record.addEventListener('click', event => play(this.recordings[index][1]));
+      // record.addEventListener('click', event => play(this.recordings[index][1]));
 
-      storagePanel.appendChild(record);
+      // storagePanel.appendChild(record);
 
       this.recording = this.otherRecording;
     };
@@ -744,6 +727,8 @@ function setHistoryLength(length) {
   //   console.log('position', position);
   // }
 
+  console.log(length);
+
   mainCanvas.width = length;
 }
 
@@ -756,7 +741,7 @@ function draw({analyser}) {
   noPermission.classList.add('granted');
   authorized.classList.add('authorized');
 
-  setCanvasSize(displayCanvas);
+  setCanvasSize(displayCanvas, displayContext);
 
   updates.push(update);
 
@@ -945,9 +930,35 @@ window.wheel = event => {
   console.log('wheel', event);
 };
 
-window.storage = () => {
+window.storage = openStorage;
+
+let storageRowCount = 4;
+function openStorage(even) {
   authorized.classList.toggle('storage');
-};
+
+  if (storagePanel.children.length === 0) {
+    const width = storagePanel.clientWidth,
+          height = storagePanel.clientHeight / storageRowCount;
+
+    console.log(width);
+
+    for (let i = 0; i < storageRowCount; i++) {
+      const canvas = document.createElement('canvas'),
+            context = canvas.getContext('2d');
+
+      storagePanel.appendChild(canvas);
+      setCanvasSize(canvas, context, width, height);
+
+      context.drawImage(mainCanvas,
+        0, 0, mainCanvas.width, mainCanvas.height,
+        0, 0, width, height);
+    }
+  }
+  else {
+    for (let i = storagePanel.children.length - 1; i >= 0; i--) storagePanel.removeChild(storagePanel.children[i]);
+    // while (storagePanel.firstChild) storagePanel.removeChild(storagePanel.firstChild);
+  }
+}
 
 document.body.addEventListener('webkitfullscreenchange', event => {
   document.body.classList.toggle('fullscreen');
@@ -979,4 +990,20 @@ function mediaError(error) {
   // if (confirm(`An error occurred! (${error.message} ${error.stack}) Reload?`)) {
   //   window.location.reload();
   // }
+}
+
+function setCanvasSize(canvas, context, width, height) {
+  const parent = canvas.parentElement;
+
+  canvas.width = width === undefined ? parent.clientWidth : width;
+  canvas.height = height === undefined ? parent.clientHeight : height;
+
+  disableSmoothing(context);
+}
+
+function disableSmoothing(context) {
+  context.imageSmoothingEnabled = false;
+  context.mozImageSmoothingEnabled = false;
+  context.webkitImageSmoothingEnabled = false;
+  context.msImageSmoothingEnabled = false;
 }
