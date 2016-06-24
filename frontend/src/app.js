@@ -213,6 +213,44 @@ function addMenu(container) {
   }
 }
 
+// // probably need better names than these
+// const options = {
+//   upper: {
+//     'Bars': {
+//       'more': nodes.cycleBarCount(), // should just be a state modification?
+//       'less': nodes.cycleBarCount(backwards) // should just be a state modification?
+//     },
+//     'Smoothing': {
+//       'more': () => {},
+//       'less': () => {}
+//     },
+//     'Gain': {
+//       'more': () => {},
+//       'less': () => {}
+//     }
+//   },
+//   lower: {
+//     'Speed': {
+//       'faster': () => {},
+//       'slower': () => {}
+//     },
+//     'Length': {
+//       'more': () => {},
+//       'less': () => {}
+//     },
+//     'Quality': {
+//       'hard': () => {},
+//       'soft': () => {}
+//     }
+//   },
+//   storage: {
+//     'Rows': {
+//       'more': () => {},
+//       'less': () => {}
+//     }
+//   }
+// };
+
 const audio = document.createElement('audio');
 
 document.body.insertBefore(audio, document.body.firstChild);
@@ -734,6 +772,7 @@ function setHistoryLength(length) {
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
 let position = 0, offsets = {data: 0, view: 0};
+let lastUpdate, currentTime;
 
 function draw({analyser}) {
   accumulationStart = new Date().getTime();
@@ -747,8 +786,13 @@ function draw({analyser}) {
 
   requestUpdateLoop();
 
+  console.log(analyser);
+
   function update() {
     const now = new Date().getTime();
+
+    lastUpdate = now;
+    currentTime = analyser.context.currentTime;
 
     analyser.getByteFrequencyData(data);
 
