@@ -33,6 +33,16 @@ function encodeEntities(value) {
     replace(/>/g, '&gt;');
 }
 
+function markNotCapable(reason) {
+  const notCapable = document.getElementById('not-capable'),
+        capable = document.getElementById('capable');
+
+  notCapable.style.display = 'flex';
+  capable.style.display = 'none';
+
+  notCapable.appendChild(document.createTextNode(reason));
+}
+
 try {
   navigator.getUserMedia = (navigator.getUserMedia ||
                             navigator.webkitGetUserMedia ||
@@ -84,18 +94,6 @@ function handleAndroidComponent() {
       };
     }
   }
-}
-
-function markNotCapable(reason) {
-  const notCapable = document.getElementById('not-capable'),
-        capable = document.getElementById('capable');
-
-  notCapable.style.display = 'flex';
-  capable.style.display = 'none';
-
-  notCapable.appendChild(document.createTextNode(reason));
-
-  // alert(reason);
 }
 
 const audioContext = new AudioContext();
@@ -272,6 +270,22 @@ displayContext.imageSmoothingEnabled = false;
 window.addEventListener('resize', event => setCanvasSize(displayCanvas, displayContext));
 history.addEventListener('resize', event => setCanvasSize(displayCanvas, displayContext));
 
+window.addEventListener('keyup', keyup);
+
+const commands = {
+  '66': event => {
+    if (mainCanvas.parentElement) mainCanvas.parentElement.removeChild(mainCanvas);
+    else document.body.appendChild(mainCanvas);
+  }
+};
+
+function keyup(event) {
+  console.log(event.keyCode);
+  const command = commands[event.keyCode];
+
+  if (command) return command(event);
+}
+
 displayCanvas.addEventListener('click', event => {
   const sliceIndex = Math.floor(event.offsetX / displayCanvas.width * mainCanvas.width);
 
@@ -279,6 +293,76 @@ displayCanvas.addEventListener('click', event => {
 
 });
 
+
+// not sure what to name this yet
+class X {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.context = canvas.getContext('2d');
+    this.pixel =  this.context.createImageData(1, 1);
+    this.pixelData = this.pixel.data;
+  }
+
+  setSize(width, height) {
+    this.canvas.width = width;
+    this.canvas.height = height;
+  }
+
+  setParameters(storageRowCount, historyLength, barCount) {
+    console.log('parameters', storageRowCount, historyLength, barCount);
+    this.canvas.width = (storageRowCount + 1) * historyLength;
+    this.canvas.height = barCount;
+
+    this.nextSliceIndex = historyLength;
+  }
+
+  setSlice(accumulator) {
+    const {canvas, context, nextSliceIndex, pixel, pixelData} = this;
+    console.log(nextSliceIndex);
+    for (let i = 0; i < canvas.height; i++) {
+      const value = accumulationStrategy.getValue(accumulator, accumulator.length - 1 - i);
+
+      pixelData[0] = value;
+      pixelData[1] = value;
+      pixelData[2] = value;
+      pixelData[3] = 255;
+
+      context.putImageData(pixel, nextSliceIndex, i);
+    }
+  }
+
+  finishSlice(accumulator) {
+    if (accumulator) this.setSlice(accumulator);
+
+    this.nextSliceIndex = (this.nextSliceIndex === 0 ? this.canvas.width : this.nextSliceIndex) - 1;
+  }
+
+  drawTo(canvas, context, distance = 0) {
+    const xStart = this.nextSliceIndex;
+
+    let width = this.canvas.width - xStart;
+
+    // console.log('Drawing', {xStart, width, canvasWidth: this.canvas.width});
+
+    if (xStart + width > this.canvas.width) {
+      width = this.canvas.width - xStart;
+
+      const missing = canvas.width - width;
+
+      const x = this.canvas.width - missing;
+      const otherXStart = x / this.canvas.wdith * canvas.width;
+      const remainingWidth = missing / this.canvas.width * canvas.width;
+
+      context.drawImage(this.canvas, 0, 0, x, this.canvas.height, otherXStart, 0, remainingWidth, canvas.height);
+    }
+
+    // context.drawImage(this.canvas, xStart, 0, width, this.canvas.height, 0, 0, canvas.width, canvas.height);
+  }
+}
+
+const canvasBuffer = new X(mainCanvas);
+
+// canvasBuffer.setParameters(4, 60, 2);
 
 // getUserMedia({
 //   "audio": {
@@ -302,7 +386,7 @@ getUserMedia({audio: true})
 const saveBlockDuration = 30 * 1000; // five seconds
 const smoothingTimeConstant = 0.66;
 
-const barCounts = new Cycle([1, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
+const barCounts = new Cycle([1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192/**//*, 16384, 32768*/]);
 const accumulationPeriods = new Cycle([1000, 1000 / 2, 1000 / 4, 1000 / 8, 1000 / 16, 1000 / 32, 1000 / 64, 1000 / 128]);
 const historyLengths = new Cycle([60, 90, 120, 150, 180, 240, 300, 500, 1000, 1500]);
 
@@ -329,12 +413,6 @@ function play(blob, position = 0) {
 
   audio.currentTime = position / 1000;
   audio.play();
-}
-
-function attachRecorder(stream) {
-
-
-  return {recorder, stream};
 }
 
 class Recorder {
@@ -740,7 +818,9 @@ function setAnalyserSize(analyser, size, nodes) {
   for (let i = nodes.children.length; i < count; i++) nodes.appendChild(document.createElement('div'));
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
 
-  mainCanvas.height = count;
+  canvasBuffer.setParameters(4, historyLengthCycle.value, barCountCycle.value);
+
+  // mainCanvas.height = count;
   // for (let i = 0; i < history.children.length; i++) {
   //   const slice = history.children[i];
   //   for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
@@ -767,7 +847,8 @@ function setHistoryLength(length) {
 
   console.log(length);
 
-  mainCanvas.width = length;
+  // mainCanvas.width = length;
+  canvasBuffer.setParameters(4, length, barCountCycle.value);
 }
 
 let indicators = {mover: undefined, start: undefined, end: undefined};
@@ -802,6 +883,8 @@ function draw({analyser}) {
       offsets.data++;
 
       for (let i = 0; i < accumulator.length; i++) accumulator[i] = 0;
+
+      canvasBuffer.finishSlice();
 
       accumulations = 1;
       accumulationStart = now;
@@ -908,26 +991,40 @@ function draw({analyser}) {
       mainContext.putImageData(mainPixel, nextSliceIndex, i);
     }
 
+    canvasBuffer.setSlice(accumulator);
+
     // displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
 
-    const wrapped = offsets.view % mainCanvas.width;
+    canvasBuffer.drawTo(displayCanvas, displayContext, 0);
 
-    if (offsets.view > 0) {
-      displayContext.drawImage(mainCanvas,
-        0, 0, mainCanvas.width, mainCanvas.height,
-        0, 0, displayCanvas.width, displayCanvas.height);
-    }
-    else {
-      displayContext.drawImage(mainCanvas,
-        offsets.view > 0 ? 0 : nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height,
-        // nextSliceIndex / mainCanvas.width * displayCanvas.width,
-        0,
-        0,
-        // displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width),
-        displayCanvas.width,
-        displayCanvas.height);
+    // const wrapped = offsets.view % mainCanvas.width;
 
-    }
+    // if (offsets.view > 0) {
+    //   displayContext.drawImage(mainCanvas,
+    //     0, 0, mainCanvas.width, mainCanvas.height,
+    //     0, 0, displayCanvas.width, displayCanvas.height);
+    // }
+    // else {
+    //   displayContext.drawImage(mainCanvas,
+    //     offsets.view > 0 ? 0 : nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height,
+    //     // nextSliceIndex / mainCanvas.width * displayCanvas.width,
+    //     0,
+    //     0,
+    //     // displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width),
+    //     displayCanvas.width,
+    //     displayCanvas.height);
+
+    // }
+
+
+
+
+
+
+
+
+
+
     // console.log(wrapped, nextSliceIndex, offsets.view);
 
     // displayContext.drawImage(mainCanvas,
@@ -993,8 +1090,12 @@ function openStorage(even) {
       storagePanel.appendChild(canvas);
       setCanvasSize(canvas, context, width, height);
 
+      // context.drawImage(mainCanvas,
+      //   0, 0, mainCanvas.width, mainCanvas.height,
+      //   0, 0, width, height);
+
       context.drawImage(mainCanvas,
-        0, 0, mainCanvas.width, mainCanvas.height,
+        i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
         0, 0, width, height);
     }
   }
