@@ -1072,38 +1072,85 @@ window.wheel = event => {
   console.log('wheel', event);
 };
 
-window.storage = openStorage;
+window.toggleStorage = createStorageToggler();
 
 let storageRowCount = 4;
-function openStorage(even) {
-  authorized.classList.toggle('storage');
 
-  if (storagePanel.children.length === 0) {
-    const width = storagePanel.clientWidth,
-          height = storagePanel.clientHeight / storageRowCount;
+function createStorageToggler() {
+  let drawFn;
+  const contexts = [];
 
-    console.log(width);
+  return function toggleStorage() {
+    if (storagePanel.children.length === 0) {
+      authorized.classList.add('storage');
 
-    for (let i = 0; i < storageRowCount; i++) {
-      const canvas = document.createElement('canvas'),
-            context = canvas.getContext('2d');
+      const width = storagePanel.clientWidth,
+            height = storagePanel.clientHeight / storageRowCount;
 
-      storagePanel.appendChild(canvas);
-      setCanvasSize(canvas, context, width, height);
+      console.log(width);
 
-      // context.drawImage(mainCanvas,
-      //   0, 0, mainCanvas.width, mainCanvas.height,
-      //   0, 0, width, height);
+      for (let i = 0; i < storageRowCount; i++) {
+        const canvas = document.createElement('canvas'),
+              context = canvas.getContext('2d');
 
-      // context.drawImage(mainCanvas,
-      //   i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
-      //   0, 0, width, height);
+        storagePanel.appendChild(canvas);
+        setCanvasSize(canvas, context, width, height);
+
+        contexts.push(context);
+      }
+
+      // is there a better way to abstract this out?
+      drawFn = () => {
+        for (let i = 0; i < contexts.length; i++) {
+          const context = contexts[i];
+
+          console.log(i, mainCanvas.width, mainCanvas.height, storageRowCount);
+          context.drawImage(mainCanvas,
+            i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
+            0, 0, width, height);
+        }
+
+        return drawFn;
+      };
+
+      updates.push(drawFn);
     }
+    else {
+      drawFn = undefined;
+      for (let i = storagePanel.children.length - 1; i >= 0; i--) storagePanel.removeChild(storagePanel.children[i]);
+      contexts.splice(0);
+      authorized.classList.remove('storage');
+    }
+  };
+}
+
+function closeStorage() {
+  shouldDrawAgain = false;
+  for (let i = storagePanel.children.length - 1; i >= 0; i--) storagePanel.removeChild(storagePanel.children[i]);
+}
+
+function openStorage() {
+  const width = storagePanel.clientWidth,
+        height = storagePanel.clientHeight / storageRowCount;
+
+  console.log(width);
+
+
+  for (let i = 0; i < storageRowCount; i++) {
+    const canvas = document.createElement('canvas'),
+          context = canvas.getContext('2d');
+
+    storagePanel.appendChild(canvas);
+    setCanvasSize(canvas, context, width, height);
+
+    contexts.push(context);
+
+    // context.drawImage(mainCanvas,
+    //   0, 0, mainCanvas.width, mainCanvas.height,
+    //   0, 0, width, height);
   }
-  else {
-    for (let i = storagePanel.children.length - 1; i >= 0; i--) storagePanel.removeChild(storagePanel.children[i]);
-    // while (storagePanel.firstChild) storagePanel.removeChild(storagePanel.firstChild);
-  }
+
+  updates.push(draw);
 }
 
 document.body.addEventListener('webkitfullscreenchange', event => {
@@ -1143,6 +1190,8 @@ function setCanvasSize(canvas, context, width, height) {
 
   canvas.width = width === undefined ? parent.clientWidth : width;
   canvas.height = height === undefined ? parent.clientHeight : height;
+
+  console.log(canvas.width, canvas.height);
 
   disableSmoothing(context);
 }
