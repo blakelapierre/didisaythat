@@ -261,7 +261,6 @@ const mainCanvas = document.createElement('canvas'),
       mainPixelData = mainPixel.data,
       mainCanvasColumnTime = [];
 
-
 history.appendChild(displayCanvas);
 
 mainContext.imageSmoothingEnabled = false;
@@ -275,7 +274,7 @@ window.addEventListener('keyup', keyup);
 const commands = {
   '66': event => {
     if (mainCanvas.parentElement) mainCanvas.parentElement.removeChild(mainCanvas);
-    else document.body.appendChild(mainCanvas);
+    else authorized.appendChild(mainCanvas);
   }
 };
 
@@ -301,6 +300,8 @@ class X {
     this.context = canvas.getContext('2d');
     this.pixel =  this.context.createImageData(1, 1);
     this.pixelData = this.pixel.data;
+
+    canvas.className = 'buffer-canvas';
   }
 
   setSize(width, height) {
@@ -1094,9 +1095,9 @@ function openStorage(even) {
       //   0, 0, mainCanvas.width, mainCanvas.height,
       //   0, 0, width, height);
 
-      context.drawImage(mainCanvas,
-        i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
-        0, 0, width, height);
+      // context.drawImage(mainCanvas,
+      //   i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
+      //   0, 0, width, height);
     }
   }
   else {
