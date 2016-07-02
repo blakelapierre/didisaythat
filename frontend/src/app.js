@@ -274,7 +274,10 @@ window.addEventListener('keyup', keyup);
 const commands = {
   '66': event => {
     if (mainCanvas.parentElement) mainCanvas.parentElement.removeChild(mainCanvas);
-    else authorized.appendChild(mainCanvas);
+    else {
+      authorized.appendChild(mainCanvas);
+      setTimeout(() => disableSmoothing(mainContext), 1000); // does nothing?
+    }
   }
 };
 
@@ -305,21 +308,19 @@ class X {
   }
 
   setSize(width, height) {
-    this.canvas.width = width;
-    this.canvas.height = height;
+    setCanvasSize(this.canvas, this.context, width, height);
   }
 
   setParameters(storageRowCount, historyLength, barCount) {
     console.log('parameters', storageRowCount, historyLength, barCount);
-    this.canvas.width = (storageRowCount + 1) * historyLength;
-    this.canvas.height = barCount;
+    this.setSize((storageRowCount + 1) * historyLength, barCount);
 
     this.nextSliceIndex = historyLength;
   }
 
   setSlice(accumulator) {
     const {canvas, context, nextSliceIndex, pixel, pixelData} = this;
-    console.log(nextSliceIndex);
+
     for (let i = 0; i < canvas.height; i++) {
       const value = accumulationStrategy.getValue(accumulator, accumulator.length - 1 - i);
 
@@ -355,6 +356,7 @@ class X {
       const remainingWidth = missing / this.canvas.width * canvas.width;
 
       context.drawImage(this.canvas, 0, 0, x, this.canvas.height, otherXStart, 0, remainingWidth, canvas.height);
+      console.log('draw', {x});
     }
 
     // context.drawImage(this.canvas, xStart, 0, width, this.canvas.height, 0, 0, canvas.width, canvas.height);
@@ -981,16 +983,16 @@ function draw({analyser}) {
 
     mainCanvasColumnTime[nextSliceIndex] = accumulationStart;
 
-    for (let i = 0; i < mainCanvas.height; i++) {
-      const value = accumulationStrategy.getValue(accumulator, accumulator.length - 1 - i);
+    // for (let i = 0; i < mainCanvas.height; i++) {
+    //   const value = accumulationStrategy.getValue(accumulator, accumulator.length - 1 - i);
 
-      mainPixelData[0] = value;
-      mainPixelData[1] = value;
-      mainPixelData[2] = value;
-      mainPixelData[3] = 255;
+    //   mainPixelData[0] = value;
+    //   mainPixelData[1] = value;
+    //   mainPixelData[2] = value;
+    //   mainPixelData[3] = 255;
 
-      mainContext.putImageData(mainPixel, nextSliceIndex, i);
-    }
+    //   mainContext.putImageData(mainPixel, nextSliceIndex, i);
+    // }
 
     canvasBuffer.setSlice(accumulator);
 
@@ -1087,8 +1089,6 @@ function createStorageToggler() {
       const width = storagePanel.clientWidth,
             height = storagePanel.clientHeight / storageRowCount;
 
-      console.log(width);
-
       for (let i = 0; i < storageRowCount; i++) {
         const canvas = document.createElement('canvas'),
               context = canvas.getContext('2d');
@@ -1104,7 +1104,6 @@ function createStorageToggler() {
         for (let i = 0; i < contexts.length; i++) {
           const context = contexts[i];
 
-          console.log(i, mainCanvas.width, mainCanvas.height, storageRowCount);
           context.drawImage(mainCanvas,
             i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
             0, 0, width, height);
@@ -1132,9 +1131,6 @@ function closeStorage() {
 function openStorage() {
   const width = storagePanel.clientWidth,
         height = storagePanel.clientHeight / storageRowCount;
-
-  console.log(width);
-
 
   for (let i = 0; i < storageRowCount; i++) {
     const canvas = document.createElement('canvas'),
