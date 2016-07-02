@@ -434,16 +434,6 @@ class Recorder {
     recording.onDurationMet = () => {
       this.recordings.push([this.recording.start, this.recording.blob]);
 
-      // const record = document.createElement('record');
-
-      // record.innerHTML = `${new Date(this.recording.start)}, ${this.recording.blob.size} record`;
-
-      // const index = this.recordings.length - 1;
-
-      // record.addEventListener('click', event => play(this.recordings[index][1]));
-
-      // storagePanel.appendChild(record);
-
       this.recording = this.otherRecording;
     };
 
@@ -822,35 +812,11 @@ function setAnalyserSize(analyser, size, nodes) {
   for (let i = nodes.children.length - 1; i >= count; i--) nodes.children[i].remove();
 
   canvasBuffer.setParameters(4, historyLengthCycle.value, barCountCycle.value);
-
-  // mainCanvas.height = count;
-  // for (let i = 0; i < history.children.length; i++) {
-  //   const slice = history.children[i];
-  //   for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
-  //   for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
-  // }
 }
 
 function setHistoryLength(length) {
-  // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
-  // for (let i = history.children.length; i < length; i++) history.appendChild(document.createElement('slice'));
-  // for (let i = history.children.length; i < length; i++) history.insertBefore(document.createElement('slice'), history.firstChild);
-  // for (let i = history.children.length - 1; i >= length; i--) history.children[i].remove();
-
-  // for (let i = 0; i < history.children.length; i++) {
-  //   const slice = history.children[i];
-  //   for (let i = slice.children.length; i < nodes.children.length; i++) slice.insertBefore(document.createElement('node'), slice.firstChild);
-  //   for (let i = slice.children.length - 1; i >= nodes.children.length; i--) slice.children[0].remove();
-  // }
-
-  // if (position > history.children.length) {
-  //   position = history.children.length - 1;
-  //   console.log('position', position);
-  // }
-
   console.log(length);
 
-  // mainCanvas.width = length;
   canvasBuffer.setParameters(4, length, barCountCycle.value);
 }
 
@@ -927,7 +893,6 @@ function draw({analyser}) {
         sum += average;
 
         accumulationStrategy.add(accumulator, i, average);
-        // accumulator[i] += average;
 
         child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
 
@@ -947,7 +912,6 @@ function draw({analyser}) {
 
         sum += average;
         accumulationStrategy.add(accumulator, i, average);
-        // accumulator[i] += average;
 
         child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
 
@@ -966,7 +930,6 @@ function draw({analyser}) {
 
         sum += value;
         accumulationStrategy.add(accumulator, i, value);
-        // accumulator[i] += value;
 
         child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
 
@@ -983,63 +946,8 @@ function draw({analyser}) {
 
     mainCanvasColumnTime[nextSliceIndex] = accumulationStart;
 
-    // for (let i = 0; i < mainCanvas.height; i++) {
-    //   const value = accumulationStrategy.getValue(accumulator, accumulator.length - 1 - i);
-
-    //   mainPixelData[0] = value;
-    //   mainPixelData[1] = value;
-    //   mainPixelData[2] = value;
-    //   mainPixelData[3] = 255;
-
-    //   mainContext.putImageData(mainPixel, nextSliceIndex, i);
-    // }
-
     canvasBuffer.setSlice(accumulator);
-
-    // displayContext.drawImage(mainCanvas, 0, 0, mainCanvas.width, mainCanvas.height, 0, 0, displayCanvas.width, displayCanvas.height);
-
     canvasBuffer.drawTo(displayCanvas, displayContext, 0);
-
-    // const wrapped = offsets.view % mainCanvas.width;
-
-    // if (offsets.view > 0) {
-    //   displayContext.drawImage(mainCanvas,
-    //     0, 0, mainCanvas.width, mainCanvas.height,
-    //     0, 0, displayCanvas.width, displayCanvas.height);
-    // }
-    // else {
-    //   displayContext.drawImage(mainCanvas,
-    //     offsets.view > 0 ? 0 : nextSliceIndex, 0, mainCanvas.width - nextSliceIndex, mainCanvas.height,
-    //     // nextSliceIndex / mainCanvas.width * displayCanvas.width,
-    //     0,
-    //     0,
-    //     // displayCanvas.width - (nextSliceIndex / mainCanvas.width * displayCanvas.width),
-    //     displayCanvas.width,
-    //     displayCanvas.height);
-
-    // }
-
-
-
-
-
-
-
-
-
-
-    // console.log(wrapped, nextSliceIndex, offsets.view);
-
-    // displayContext.drawImage(mainCanvas,
-    //   0, 0, nextSliceIndex, mainCanvas.height,
-    //   0, 0, (nextSliceIndex / mainCanvas.width) * displayCanvas.width, displayCanvas.height);
-
-
-    // if (wrapped > 0) {
-    //   displayContext.drawImage(mainCanvas,
-    //     0, 0, nextSliceIndex, mainCanvas.height,
-    //     0, 0, (nextSliceIndex / mainCanvas.width) * mainCanvas.width, displayCanvas.height);
-    // }
 
     const total = sum / nodes.children.length;
 
