@@ -1048,10 +1048,6 @@ function openStorage() {
     setCanvasSize(canvas, context, width, height);
 
     contexts.push(context);
-
-    // context.drawImage(mainCanvas,
-    //   0, 0, mainCanvas.width, mainCanvas.height,
-    //   0, 0, width, height);
   }
 
   updates.push(draw);
@@ -1083,10 +1079,6 @@ function mediaError(error) {
   // if (error.name === 'PermissionDeniedError') return; //ignore for now
 
   showError(error);
-
-  // if (confirm(`An error occurred! (${error.message} ${error.stack}) Reload?`)) {
-  //   window.location.reload();
-  // }
 }
 
 function setCanvasSize(canvas, context, width, height) {
