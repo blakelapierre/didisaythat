@@ -1013,7 +1013,7 @@ function createStorageToggler() {
           const context = contexts[i];
 
           context.drawImage(mainCanvas,
-            i * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
+            (storageRowCount - i - 1) * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
             0, 0, width, height);
         }
 
