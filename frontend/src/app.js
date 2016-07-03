@@ -315,7 +315,7 @@ class X {
     console.log('parameters', storageRowCount, historyLength, barCount);
     this.setSize((storageRowCount + 1) * historyLength, barCount);
 
-    this.nextSliceIndex = historyLength;
+    this.nextSliceIndex = this.canvas.width - 1;
   }
 
   setSlice(accumulator) {
@@ -960,6 +960,7 @@ function draw({analyser}) {
 }
 
 window.requestFullScreen = () => {
+  console.log('going full', document.body); // fullscreen stopped working in my chrome?
   if (document.body.requestFullScreen) document.body.requestFullScreen();
   else if (document.body.webkitRequestFullScreen) document.body.webkitRequestFullScreen();
   else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
@@ -1007,6 +1008,8 @@ function createStorageToggler() {
         contexts.push(context);
       }
 
+      window.addEventListener('resize', resize);
+
       // is there a better way to abstract this out?
       drawFn = () => {
         for (let i = 0; i < contexts.length; i++) {
@@ -1014,7 +1017,7 @@ function createStorageToggler() {
 
           context.drawImage(mainCanvas,
             (storageRowCount - i - 1) * (mainCanvas.width / storageRowCount), 0, mainCanvas.width / storageRowCount, mainCanvas.height,
-            0, 0, width, height);
+            0, 0, context.canvas.width, context.canvas.height);
         }
 
         return drawFn;
@@ -1027,8 +1030,23 @@ function createStorageToggler() {
       for (let i = storagePanel.children.length - 1; i >= 0; i--) storagePanel.removeChild(storagePanel.children[i]);
       contexts.splice(0);
       authorized.classList.remove('storage');
+      window.removeEventListener('resize', resize);
     }
   };
+
+  function resize() {
+    updates.push(() => {
+      const width = storagePanel.clientWidth,
+            height = storagePanel.clientHeight / storageRowCount;
+
+      for (let i = 0; i < storageRowCount; i++) {
+        const context = contexts[i];
+        setCanvasSize(context.canvas, context, width, height);
+
+        console.log(width, height);
+      }
+    });
+  }
 }
 
 function closeStorage() {
@@ -1056,6 +1074,15 @@ function openStorage() {
 document.body.addEventListener('webkitfullscreenchange', event => {
   document.body.classList.toggle('fullscreen');
 });
+
+document.onfullscreenchange = event => {
+  console.log('fullscreen');
+  document.body.classList.toggle('fullscreen');
+};
+
+document.onmozfullscreenchange = event => {
+  document.body.classList.toggle('fullscreen');
+};
 
 const updates = [];
 
