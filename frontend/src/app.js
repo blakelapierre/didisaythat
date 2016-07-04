@@ -304,7 +304,27 @@ class X {
     this.pixel =  this.context.createImageData(1, 1);
     this.pixelData = this.pixel.data;
 
+    this.views = [];
+
     canvas.className = 'buffer-canvas';
+  }
+
+  createView() {
+    const canvas = document.createElement('canvas'),
+          context = canvas.getContext('2d');
+
+    return {canvas, context};
+  }
+
+  createMovingView() {
+
+  }
+
+  updateViews() {
+    // should use something better than this
+    for (let i = 0; i < this.views.length; i++) {
+      if (shouldUpdate(this.views[i])) update(this.views[i]);
+    }
   }
 
   setSize(width, height) {
@@ -339,25 +359,34 @@ class X {
     this.nextSliceIndex = (this.nextSliceIndex === 0 ? this.canvas.width : this.nextSliceIndex) - 1;
   }
 
-  drawTo(canvas, context, distance = 0) {
-    const xStart = this.nextSliceIndex;
-
-    let width = this.canvas.width - xStart;
-
-    // console.log('Drawing', {xStart, width, canvasWidth: this.canvas.width});
-
-    if (xStart + width > this.canvas.width) {
-      width = this.canvas.width - xStart;
-
-      const missing = canvas.width - width;
-
-      const x = this.canvas.width - missing;
-      const otherXStart = x / this.canvas.wdith * canvas.width;
-      const remainingWidth = missing / this.canvas.width * canvas.width;
-
-      context.drawImage(this.canvas, 0, 0, x, this.canvas.height, otherXStart, 0, remainingWidth, canvas.height);
-      console.log('draw', {x});
+  drawTo(canvas, context, distance = 1) {
+    const wi = Math.min(distance, this.canvas.width - this.nextSliceIndex),
+          vwwi = this.canvas.width - wi;
+console.log(this.nextSliceIndex, wi, vwwi);
+    if (vwwi > 0) {
+      context.drawImage(this.canvas, 0, 0, vwwi, this.canvas.height, vwwi, 0, vwwi, canvas.height);
     }
+    context.drawImage(this.canvas, this.nextSliceIndex, 0, wi, this.canvas.height, 0, 0, canvas.width, canvas.height);
+
+
+    // const xStart = this.nextSliceIndex;
+
+    // let width = this.canvas.width - xStart;
+
+    // // console.log('Drawing', {xStart, width, canvasWidth: this.canvas.width});
+
+    // if (xStart + width > this.canvas.width) {
+    //   width = this.canvas.width - xStart;
+
+    //   const missing = canvas.width - width;
+
+    //   const x = this.canvas.width - missing;
+    //   const otherXStart = x / this.canvas.wdith * canvas.width;
+    //   const remainingWidth = missing / this.canvas.width * canvas.width;
+
+    //   context.drawImage(this.canvas, 0, 0, x, this.canvas.height, otherXStart, 0, remainingWidth, canvas.height);
+    //   console.log('draw', {x});
+    // }
 
     // context.drawImage(this.canvas, xStart, 0, width, this.canvas.height, 0, 0, canvas.width, canvas.height);
   }
@@ -947,7 +976,7 @@ function draw({analyser}) {
     mainCanvasColumnTime[nextSliceIndex] = accumulationStart;
 
     canvasBuffer.setSlice(accumulator);
-    canvasBuffer.drawTo(displayCanvas, displayContext, 0);
+    canvasBuffer.drawTo(displayCanvas, displayContext, historyLengthCycle.value);
 
     const total = sum / nodes.children.length;
 
@@ -999,8 +1028,7 @@ function createStorageToggler() {
             height = storagePanel.clientHeight / storageRowCount;
 
       for (let i = 0; i < storageRowCount; i++) {
-        const canvas = document.createElement('canvas'),
-              context = canvas.getContext('2d');
+        const {canvas, context} = canvasBuffer.createView();
 
         storagePanel.appendChild(canvas);
         setCanvasSize(canvas, context, width, height);
@@ -1047,28 +1075,6 @@ function createStorageToggler() {
       }
     });
   }
-}
-
-function closeStorage() {
-  shouldDrawAgain = false;
-  for (let i = storagePanel.children.length - 1; i >= 0; i--) storagePanel.removeChild(storagePanel.children[i]);
-}
-
-function openStorage() {
-  const width = storagePanel.clientWidth,
-        height = storagePanel.clientHeight / storageRowCount;
-
-  for (let i = 0; i < storageRowCount; i++) {
-    const canvas = document.createElement('canvas'),
-          context = canvas.getContext('2d');
-
-    storagePanel.appendChild(canvas);
-    setCanvasSize(canvas, context, width, height);
-
-    contexts.push(context);
-  }
-
-  updates.push(draw);
 }
 
 document.body.addEventListener('webkitfullscreenchange', event => {
