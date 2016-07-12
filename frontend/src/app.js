@@ -96,6 +96,76 @@ function handleAndroidComponent() {
   }
 }
 
+function attach(root, context) {
+  const subContext = context.attach(root /* ? */); /* ? */
+  for (let i = 0; i < root.children.length; i++) attach(root.children[i], subContext);
+}
+
+class Context {
+  constructor(config) {
+    this.context = contextify(config);
+
+    function contextify(config) {
+      for (let name in config) {
+        let item = config[name];
+
+        if (typeof item === 'object') item = contextify(item);
+
+        // http://stackoverflow.com/questions/8955533/javascript-jquery-split-camelcase-string-and-add-hyphen-rather-than-space
+        const tagName = name.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toUpperCase();
+
+        config[tagName] = bounce(tagName, item);
+      }
+
+      return config;
+    }
+
+    // not sure if this is really what I want
+    function bounce(tagName, item) {
+      return (element, context) => {
+        item(element, context, tagName);
+        return context;
+      };
+    }
+  }
+
+  attach (element) {
+    const {tagName} = element,
+          context = this.context[tagName];
+
+    return context ? context(element, this) : this;
+  }
+}
+
+const context = new Context({
+  notCapable (element, context) {
+    console.log('not-capable', element, context);
+  },
+
+  capable (element, context) {
+    console.log('capable', element, context);
+  }
+});
+
+attach(document.body, context);
+
+const request = window.indexedDB.open('dist.lol');
+
+let db;
+request.onerror = event => {
+  console.log('error opening request', event, request);
+};
+
+request.onsuccess = event => {
+  console.log('request open', event, request);
+  db = request.result;
+};
+
+request.onupgradeneeded = event => {
+  console.log('needs upgrade', event);
+  event.target.result.createObjectStore('recordings', {autoIncrement: true});
+};
+
 const audioContext = new AudioContext();
 
 const noPermission = document.getElementById('no-permission'),
@@ -362,7 +432,7 @@ class X {
   drawTo(canvas, context, distance = 1) {
     const wi = Math.min(distance, this.canvas.width - this.nextSliceIndex),
           vwwi = this.canvas.width - wi;
-console.log(this.nextSliceIndex, wi, vwwi);
+
     if (vwwi > 0) {
       context.drawImage(this.canvas, 0, 0, vwwi, this.canvas.height, vwwi, 0, vwwi, canvas.height);
     }
@@ -447,9 +517,51 @@ function play(blob, position = 0) {
   audio.play();
 }
 
+class RecordingDataSource {
+  constructor () {
+    this.recordings = [];
+  }
+
+  addRecording ({start, blob}) {
+    this.recordings.push([start, blob]);
+
+    try {
+      const transaction = db.transaction(['recordings'], 'readwrite');
+
+      transaction.oncomplete = event => console.log('complete', event);
+      transaction.onerror = event => console.log('error', event, transaction);
+
+      const store = transaction.objectStore('recordings');
+      const request = store.add({start, blob});
+
+      request.onsuccess = event => console.log('success', event, request);
+    }
+    catch (e) {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        const transaction = db.transaction(['recordings'], 'readwrite');
+
+        transaction.oncomplete = event => console.log('complete', event);
+        transaction.onerror = event => console.log('error', event, transaction);
+
+        const store = transaction.objectStore('recordings');
+        const request = store.add({start, data: reader.result});
+
+        request.onsuccess = event => console.log('success', event, request);
+      };
+
+      reader.readAsDataURL(blob);
+
+      console.log(`saved ${start}`);
+    }
+  }
+}
+
+const recordingDataSource = new RecordingDataSource();
+
 class Recorder {
   constructor (stream, duration) {
-    this.recordings = [];
     this.recording = this._startRecording(stream, duration);
   }
 
@@ -461,7 +573,8 @@ class Recorder {
     };
 
     recording.onDurationMet = () => {
-      this.recordings.push([this.recording.start, this.recording.blob]);
+      recordingDataSource.addRecording(this.recording);
+      // this.recordings.push([this.recording.start, this.recording.blob]);
 
       this.recording = this.otherRecording;
     };

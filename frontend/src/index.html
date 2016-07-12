@@ -33,7 +33,7 @@
 
       <authorized id="authorized">
         <upper>
-          <recent>me
+          <recent>
             <nodes class="left"></nodes>
           </recent>
 
@@ -94,10 +94,10 @@
                    onmousewheel="return cycleHistorySize(event.deltaY < 0)"
                    onwheel="return cycleHistorySize(event.deltaY < 0)"
                    oncontextmenu="return cycleAccumulationPeriod()">
+           <past></past>
+           <recent></recent>
           </history>
           <playback-visuals></playback-visuals>
-
-
 
           <menu>
             <content>
@@ -125,10 +125,6 @@
             <span><milliseconds></milliseconds> <sub>ms</sub></span>
           </time> -->
         </lower>
-
-        <storage-panel>
-
-        </storage-panel>
 
         <time id="time" onclick="toggleStorage()">
           <span><hours></hours> <sup>°</sup></span>
