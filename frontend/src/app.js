@@ -1075,11 +1075,20 @@ function draw({analyser}) {
 
         child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
 
-        const width = vertical ? `${value / 255 * 100}%` : 'auto',
-              height = vertical ? 'auto' : `${value / 255 * 100}%`;
+        setStyle(vertical, child, value);
+      }
+    }
 
-        child.style.width = width;
-        child.style.height = height;
+    function setStyle(vertical, child, value) {
+      const percent = `${value / 255 * 100}%`;
+
+      if (vertical) {
+        child.style.width = percent;
+        child.style.height = 'auto';
+      }
+      else {
+        child.style.width = 'auto';
+        child.style.height = fill;
       }
     }
 
