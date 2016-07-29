@@ -1017,13 +1017,7 @@ function draw({analyser}) {
       // accumulator[0] += average;
       accumulationStrategy.add(accumulator, 0, average);
 
-      child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
-
-      const width = vertical ? `${average / 255 * 100}%` : 'auto',
-            height = vertical ? 'auto' : `${average / 255 * 100}%`;
-
-      child.style.width = width;
-      child.style.height = height;
+      setStyle(vertical, child, average);
     }
     else if (barsCount === 2) {
       for (let i= 0; i < nodes.children.length; i++) {
@@ -1036,13 +1030,7 @@ function draw({analyser}) {
 
         accumulationStrategy.add(accumulator, i, average);
 
-        child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
-
-        const width = vertical ? `${average / 255 * 100}%` : 'auto',
-              height = vertical ? 'auto' : `${average / 255 * 100}%`;
-
-        child.style.width = width;
-        child.style.height = height;
+        setStyle(vertical, child, average);
       }
     }
     else if (barsCount === 4) {
@@ -1055,40 +1043,19 @@ function draw({analyser}) {
         sum += average;
         accumulationStrategy.add(accumulator, i, average);
 
-        child.style.backgroundColor = `rgba(${average}, ${average}, ${average}, 1)`;
-
-        const width = vertical ? `${average / 255 * 100}%` : 'auto',
-              height = vertical ? 'auto' : `${average / 255 * 100}%`;
-
-        child.style.width = width;
-        child.style.height = height;
+        setStyle(vertical, child, average);
       }
     }
     else {
       for (let i= 0; i < nodes.children.length; i++) {
-        const  child = nodes.children[i];
+        const child = nodes.children[i];
 
         const value = data[i];
 
         sum += value;
         accumulationStrategy.add(accumulator, i, value);
 
-        child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
-
         setStyle(vertical, child, value);
-      }
-    }
-
-    function setStyle(vertical, child, value) {
-      const percent = `${value / 255 * 100}%`;
-
-      if (vertical) {
-        child.style.width = percent;
-        child.style.height = 'auto';
-      }
-      else {
-        child.style.width = 'auto';
-        child.style.height = fill;
       }
     }
 
@@ -1107,6 +1074,21 @@ function draw({analyser}) {
     accumulations++;
 
     return update;
+  }
+
+  function setStyle(vertical, child, value) {
+    child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
+
+    const percent = `${value / 255 * 100}%`;
+
+    if (vertical) {
+      child.style.width = percent;
+      child.style.height = 'auto';
+    }
+    else {
+      child.style.width = 'auto';
+      child.style.height = percent;
+    }
   }
 }
 
