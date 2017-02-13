@@ -966,6 +966,39 @@ let indicators = {mover: undefined, start: undefined, end: undefined};
 let position = 0, offsets = {data: 0, view: 0};
 let lastUpdate, currentTime;
 
+const averageNext = [];
+
+averageNext[8] = (data,b) => (data[b] + data[b+1] + data[b+2] + data[b+3] + data[b+4] + data[b+5] + data[b+6] + data[b+7]) / 8;
+averageNext[4] = (data,b) => (data[b] + data[b+1] + data[b+2] + data[b+3]) / 4;
+averageNext[2] = (data,b) => (data[b] + data[b+1]) / 2;
+averageNext[1] = (data,b) => data[b];
+
+function accumulate(vertical, j, c) {
+  for (let i = 0; i < j; i++) {
+    const child = nodes.children[i],
+          average = averageNext[c](data, j === 1 ? 0 : (j === 2 ? 4 * i : (j === 4 ? 2 * i : i))); // !
+
+    accumulationStrategy.add(accumulator, i, average);
+
+    setStyle(vertical, child, average);
+  }
+}
+
+function setStyle(vertical, child, value) {
+  child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
+
+  const percent = `${value / 255 * 100}%`;
+
+  if (vertical) {
+    child.style.width = percent;
+    child.style.height = 'auto';
+  }
+  else {
+    child.style.width = 'auto';
+    child.style.height = percent;
+  }
+}
+
 function draw({analyser}) {
   accumulationStart = new Date().getTime();
 
@@ -1007,57 +1040,7 @@ function draw({analyser}) {
 
     const barsCount = nodes.children.length;
 
-    if (barsCount === 1) {
-      const child = nodes.children[0];
-
-      const total = data[0] + data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7],
-            average = total / 8;
-
-      // sum += average; // we want the background to be black in this case (barsCount === 1) [code needs some reworking]
-      // accumulator[0] += average;
-      accumulationStrategy.add(accumulator, 0, average);
-
-      setStyle(vertical, child, average);
-    }
-    else if (barsCount === 2) {
-      for (let i= 0; i < nodes.children.length; i++) {
-        const child = nodes.children[i];
-
-        const total = data[4 * i] + data[4 * i + 1] + data[4 * i + 2] + data[4 * i + 3],
-              average = total / 4;
-
-        sum += average;
-
-        accumulationStrategy.add(accumulator, i, average);
-
-        setStyle(vertical, child, average);
-      }
-    }
-    else if (barsCount === 4) {
-      for (let i= 0; i < nodes.children.length; i++) {
-        const child = nodes.children[i];
-
-        const total = data[2 * i] + data[2 * i + 1],
-              average = total / 2;
-
-        sum += average;
-        accumulationStrategy.add(accumulator, i, average);
-
-        setStyle(vertical, child, average);
-      }
-    }
-    else {
-      for (let i= 0; i < nodes.children.length; i++) {
-        const child = nodes.children[i];
-
-        const value = data[i];
-
-        sum += value;
-        accumulationStrategy.add(accumulator, i, value);
-
-        setStyle(vertical, child, value);
-      }
-    }
+    accumulate(vertical, nodes.children.length, Math.max(1, 8 / barsCount)); // vertical shouldn't be passed through here!
 
     // const nextSliceIndex = position >= mainCanvas.width ? 0 : mainCanvas.width -1 - position;
     const nextSliceIndex = mainCanvas.width - ((position + offsets.view) % mainCanvas.width) - 1;
@@ -1074,21 +1057,6 @@ function draw({analyser}) {
     accumulations++;
 
     return update;
-  }
-
-  function setStyle(vertical, child, value) {
-    child.style.backgroundColor = `rgba(${value}, ${value}, ${value}, 1)`;
-
-    const percent = `${value / 255 * 100}%`;
-
-    if (vertical) {
-      child.style.width = percent;
-      child.style.height = 'auto';
-    }
-    else {
-      child.style.width = 'auto';
-      child.style.height = percent;
-    }
   }
 }
 
