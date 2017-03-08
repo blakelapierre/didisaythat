@@ -435,7 +435,7 @@ class X {
           vwwi = this.canvas.width - wi;
 
     if (vwwi > 0) {
-      context.drawImage(this.canvas, 0, 0, vwwi, this.canvas.height, vwwi, 0, vwwi, canvas.height);
+      context.drawImage(this.canvas, 0, 0, vwwi, this.canvas.height, vwwi, 0, canvas.width, canvas.height);
     }
     context.drawImage(this.canvas, this.nextSliceIndex, 0, wi, this.canvas.height, 0, 0, canvas.width, canvas.height);
 
