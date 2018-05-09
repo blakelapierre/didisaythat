@@ -11,7 +11,7 @@ function showError(error) {
   console.log(error);
   console.dir(error);
 
-  if (error.name === 'SecurityError' && window.location.protocol === 'http') {
+  if (error.name === 'SecurityError' && window.location.href.indexOf('http:') === 0) {
     errorDetailsElement.getElementsByTagName('message')[0].innerHTML = `${error.message}`;
     errorDetailsElement.getElementsByTagName('stack')[0].innerHTML = `Attempting to load over https...`;
     errorElement.style.display = 'flex';
