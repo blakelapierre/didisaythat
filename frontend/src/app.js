@@ -9,17 +9,26 @@ window.addEventListener('error', event => showError(event.error));
 
 function showError(error) {
   console.log(error);
+  console.dir(error);
 
-  errorDetailsElement.getElementsByTagName('message')[0].innerHTML = `${error.message}`;
-  errorDetailsElement.getElementsByTagName('stack')[0].innerHTML = `${encodeEntities(error.stack)}`;
-  errorElement.style.display = 'flex';
+  if (error.name === 'SecurityError' && window.location.protocol === 'http') {
+    errorDetailsElement.getElementsByTagName('message')[0].innerHTML = `${error.message}`;
+    errorDetailsElement.getElementsByTagName('stack')[0].innerHTML = `Attempting to load over https...`;
+    errorElement.style.display = 'flex';
+    window.location.href = window.location.href.replace(/^http/, 'https');
+  }
+  else {
+    errorDetailsElement.getElementsByTagName('message')[0].innerHTML = `${error.message}`;
+    errorDetailsElement.getElementsByTagName('stack')[0].innerHTML = `${encodeEntities(error.stack)}`;
+    errorElement.style.display = 'flex';
+  }
 }
 
 // from Angular
 // https://github.com/angular/angular.js/blob/v1.3.14/src/ngSanitize/sanitize.js#L435
 const SURROGATE_PAIR_REGEXP = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g,
       NON_ALPHANUMERIC_REGEXP = /([^\#-~| |!])/g;
-function encodeEntities(value) {
+function encodeEntities(value = '') {
   return value.
     replace(/&/g, '&amp;').
     replace(SURROGATE_PAIR_REGEXP, function(value) {
@@ -203,6 +212,7 @@ function addMenu(container) {
   let touches, move;
 
   container.onmousedown = event => {
+    console.log('container mouse down');
     if (event.button === 0) {
       defaultFn = mouseDefault;
       queueMenu(event.clientX, event.clientY);
@@ -598,6 +608,8 @@ function attachRecorder(stream) {
 
     let delta = time - startTime;
 
+    console.log('playback', time, delta, startTime);
+
     if (delta < 0) { // is this the right boundary?
 
       delta = 0;
@@ -781,15 +793,19 @@ function attachAnalyser({stream, data, lastSaveTime}) {
     return false;
   };
 
-  history.mouseDown = event => {
+  history.onmousedown = event => {
     console.log('mouseDown', event);
+    event.stopPropagation();
+    return false;
   };
 
-  history.mouseUp = event => {
+  history.onmouseup = event => {
+    console.log('mouseUp');
     if (event.button === 0) {
       const slice = event.target.tagName === 'SLICE' ? event.target : event.target.parentNode;
 
       updates.push(() => {
+        console.log(indicators);
         if (indicators.mover) indicators.mover.classList.remove('mover');
         if (indicators.start) indicators.start.classList.remove('start');
         if (indicators.end) indicators.end.classList.remove('end');
@@ -798,14 +814,24 @@ function attachAnalyser({stream, data, lastSaveTime}) {
         // indicators.end = history.firstChild;
         indicators.end = history.children[Math.max(0, history.children.length - position)];
 
-        indicators.start.classList.add('start');
-        indicators.end.classList.add('end');
-        indicators.mover.classList.add('mover');
+        if (indicators.start) indicators.start.classList.add('start');
+        if (indicators.end) indicators.end.classList.add('end');
+        if (indicators.mover) indicators.mover.classList.add('mover');
       });
 
       playback(slice.approximateTime);
+
+      event.stopPropagation();
     }
   };
+
+  history.oncontextmenu = event => {
+    event.stopPropagation();
+    return cycleAccumulationPeriod();
+  };
+
+  history.onmousewheel = event => cycleHistorySize(event.deltaY < 0);
+  history.onwheel = event => cycleHistorySize(event.deltaY < 0);
 
   return {stream, data, lastSaveTime, analyser};
 }

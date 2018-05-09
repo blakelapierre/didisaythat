@@ -70,7 +70,7 @@ gulp.task('dev', cb => {
 gulp.task('browser-sync',
   () => browserSync({
     server: paths.dev.$,
-    https: true,
+    //https: true,
     ghostMode: false
   }));
 
